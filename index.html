@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConejosApp - Gestiona tu criadero</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- CSS Estilos -->
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2d8a4e">
+    <!-- Icono simple (Conejo) -->
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2613/2613141.png">
+    
+    <!-- Capturador de errores de JS visible en pantalla para depuración -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            var div = document.createElement('div');
+            div.style.position = 'fixed';
+            div.style.bottom = '20px';
+            div.style.left = '20px';
+            div.style.right = '20px';
+            div.style.background = '#fff5f5';
+            div.style.color = '#c53030';
+            div.style.border = '2px solid #fc8181';
+            div.style.padding = '15px';
+            div.style.zIndex = '999999';
+            div.style.fontFamily = 'monospace';
+            div.style.borderRadius = '10px';
+            div.style.fontSize = '13px';
+            div.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+            div.innerHTML = '<strong>Error de JS:</strong> ' + message + '<br><small>en ' + source + ' (Línea ' + lineno + ')</small>';
+            document.body.appendChild(div);
+            return false;
+        };
+    </script>
+</head>
+<body>
+
+    <!-- ================= PANTALLA 1: BIENVENIDA (COMENZAR) ================= -->
+    <div id="welcome-screen" class="screen active">
+        <div class="screen-content welcome-container">
+            <!-- Logo -->
+            <div class="logo-area">
+                <svg class="rabbit-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z" fill="none" stroke="#2d8a4e" stroke-width="4" stroke-linejoin="round"/>
+                    <path d="M40 35 C42 35 44 33 44 31 C44 29 42 27 40 27 C38 27 36 29 36 31 C36 33 38 35 40 35 Z" fill="#2d8a4e"/>
+                    <path d="M52 42 C48 45 42 45 38 42" fill="none" stroke="#2d8a4e" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M60 48 C68 48 76 52 76 60 C76 68 68 72 60 72" fill="none" stroke="#2d8a4e" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <h1 class="brand-title">Conejos<span>App</span></h1>
+                <p class="brand-tagline">Gestiona tu criadero de forma sencilla</p>
+            </div>
+
+            <!-- Imagen Principal -->
+            <div class="hero-image-container">
+                <img src="https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=600&auto=format&fit=crop&q=80" alt="Conejo hermoso" class="hero-image">
+            </div>
+
+            <!-- Lista de Características -->
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Control total</h3>
+                        <p>Registra y organiza toda la información de tu criadero.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M15 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M12 12v4a2 2 0 0 0 2 2h4"/><path d="M6 18c0-2 2-3 6-3s6 1 6 3"/></svg>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Seguimiento completo</h3>
+                        <p>Controla servicios, partos, pesos y más.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Fotos y registros</h3>
+                        <p>Guarda fotos y lleva el historial de cada conejo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón Comenzar -->
+            <button id="go-to-login" class="btn btn-primary btn-block btn-lg">
+                Comenzar
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+
+            <!-- Indicadores -->
+            <div class="carousel-dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= PANTALLA 2: INICIAR SESIÓN ================= -->
+    <div id="login-screen" class="screen">
+        <div class="screen-content form-container-screen">
+            <div class="header-logo-container">
+                <svg class="rabbit-logo-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z" fill="none" stroke="#2d8a4e" stroke-width="4" stroke-linejoin="round"/>
+                </svg>
+                <h2>Iniciar sesión</h2>
+                <p class="subtitle">Bienvenido de nuevo 💚</p>
+            </div>
+
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <input type="email" id="login-email" placeholder="Correo electrónico" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input type="password" id="login-password" placeholder="Contraseña" required>
+                        <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="remember-me" checked>
+                        <span class="checkmark"></span>
+                        Recordarme
+                    </label>
+                    <a href="#" class="forgot-link" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Iniciar sesión
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>o continúa con</span>
+            </div>
+
+            <div class="social-login-grid">
+                <button type="button" class="btn btn-outline social-btn" id="google-login">
+                    <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                    </svg>
+                    Google
+                </button>
+                <button type="button" class="btn btn-outline social-btn" id="facebook-login">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="#1877F2" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                </button>
+            </div>
+
+            <p class="auth-switch-text">¿No tienes una cuenta? <a href="#" id="go-to-register">Regístrate</a></p>
+
+            <div class="footer-decor">
+                <svg viewBox="0 0 375 120" fill="none" xmlns="http://www.w3.org/2000/svg" class="hills-illustration">
+                    <path d="M-50 130 C60 50 180 80 300 130 Z" fill="#ebf5ee"/>
+                    <path d="M50 130 C180 70 300 50 450 130 Z" fill="#d2e8d9"/>
+                    <g transform="translate(260, 58) scale(0.6)">
+                        <rect x="10" y="20" width="40" height="30" fill="#81b29a" rx="2"/>
+                        <polygon points="5,20 30,2 55,20" fill="#2d8a4e"/>
+                        <rect x="25" y="32" width="10" height="18" fill="#ffffff"/>
+                    </g>
+                    <g transform="translate(140, 85) scale(0.2)" fill="#81b29a">
+                        <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= PANTALLA 3: CREAR CUENTA (REGISTRO) ================= -->
+    <div id="register-screen" class="screen">
+        <div class="screen-content form-container-screen">
+            <button id="back-to-login" class="back-btn" aria-label="Volver atrás">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </button>
+
+            <div class="header-logo-container">
+                <svg class="rabbit-logo-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z" fill="none" stroke="#2d8a4e" stroke-width="4" stroke-linejoin="round"/>
+                </svg>
+                <h2>Crear cuenta</h2>
+                <p class="subtitle">Únete y comienza a gestionar tu criadero 💚</p>
+            </div>
+
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <input type="text" id="reg-name" placeholder="Nombre completo" required autocomplete="name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <input type="email" id="reg-email" placeholder="Correo electrónico" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input type="password" id="reg-password" placeholder="Contraseña" required>
+                        <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input type="password" id="reg-confirm-password" placeholder="Confirmar contraseña" required>
+                        <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="accept-terms" required>
+                        <span class="checkmark"></span>
+                        Acepto los <a href="#" class="terms-link">Términos y Condiciones</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Registrarme
+                </button>
+            </form>
+
+            <p class="auth-switch-text">¿Ya tienes una cuenta? <a href="#" id="go-to-login-from-reg">Iniciar sesión</a></p>
+
+            <div class="footer-decor">
+                <svg viewBox="0 0 375 120" fill="none" xmlns="http://www.w3.org/2000/svg" class="hills-illustration">
+                    <path d="M-50 130 C80 60 220 50 450 130 Z" fill="#ebf5ee"/>
+                    <path d="M0 130 C120 80 260 70 380 130 Z" fill="#d2e8d9"/>
+                    <g transform="translate(120, 75) scale(0.22)" fill="#81b29a">
+                        <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z"/>
+                    </g>
+                    <g transform="translate(200, 75) scale(0.22) scale(-1, 1) translate(-100, 0)" fill="#81b29a">
+                        <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= PANTALLA 4: APLICACIÓN COMPLETA (DASHBOARD + NAVEGACIÓN) ================= -->
+    <div id="app-dashboard" class="screen app-dashboard-layout">
+        
+        <!-- SIDEBAR DE ESCRITORIO -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <svg class="sidebar-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z" fill="none" stroke="#ffffff" stroke-width="5" stroke-linejoin="round"/>
+                </svg>
+                <div class="logo-text">
+                    <h2>Conejos<span>App</span></h2>
+                    <p>Mi Criadero</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <button class="menu-item active" data-target="sec-inicio">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Inicio
+                </button>
+                <button class="menu-item" data-target="sec-ejemplares">
+                    <!-- Icono conejo/animal -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M15 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M12 12v4a2 2 0 0 0 2 2h4"/><path d="M6 18c0-2 2-3 6-3s6 1 6 3"/></svg>
+                    Ejemplares
+                </button>
+                <button class="menu-item" data-target="sec-reproduccion">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    Reproducción
+                </button>
+                <button class="menu-item" data-target="sec-cuarentena">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Cuarentena
+                </button>
+                <button class="menu-item" data-target="sec-vacunacion">
+                    <!-- Icono jeringa/inyector -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="2" x2="22" y2="6"/><line x1="7.5" y1="12.5" x2="11.5" y2="16.5"/><path d="M2 22l7.5-7.5"/><path d="M11 13l4-4 3 3-4 4-3-3z"/></svg>
+                    Vacunación
+                </button>
+                <button class="menu-item" data-target="sec-nacimientos">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"/><path d="M12 6v12"/><path d="M8 10h8"/></svg>
+                    Nacimientos
+                </button>
+                <button class="menu-item" data-target="sec-destetes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5-2 4-2 4 2 4 2"/></svg>
+                    Destetes
+                </button>
+                <button class="menu-item" data-target="sec-pesajes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+                    Pesajes
+                </button>
+                <button class="menu-item" data-target="sec-alimentacion">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Alimentación
+                </button>
+                <button class="menu-item" data-target="sec-jaulas">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+                    Jaulas
+                </button>
+                <button class="menu-item" data-target="sec-reportes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Reportes
+                </button>
+                <button class="menu-item" data-target="sec-configuracion">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Configuración
+                </button>
+                <button class="menu-item superadmin-only" data-target="sec-administracion" style="display:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.9 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>
+                    Administración
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="profile-widget" id="profile-dropdown-btn">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="profile-avatar">
+                    <div class="profile-details">
+                        <span class="name" id="sidebar-user-name">Kevin</span>
+                        <span class="role">Administrador</span>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="profile-menu-popover" id="profile-popover">
+                    <button id="logout-btn-desktop">Cerrar Sesión</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="main-content">
+            
+            <!-- HEADER SUPERIOR -->
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="mobile-menu-btn" aria-label="Abrir menú">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <div class="section-title-area">
+                        <h1 id="page-title">Inicio</h1>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-bar">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="global-search" placeholder="Buscar ejemplares...">
+                    </div>
+                    <button class="notification-btn" aria-label="Notificaciones">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- SUBPÁGINAS DINÁMICAS -->
+            <div class="sections-wrapper">
+
+                <!-- 1. SUBPÁGINA: INICIO (HOME) -->
+                <section id="sec-inicio" class="dashboard-section active">
+                    <!-- Bienvenida Móvil -->
+                    <div class="mobile-welcome">
+                        <div class="welcome-text">
+                            <h2>Hola, <span class="user-name-placeholder">Kevin</span> 👋</h2>
+                            <p>Resumen de tu criadero</p>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=150&auto=format&fit=crop&q=80" alt="Conejo" class="welcome-rabbit-img">
+                    </div>
+
+                    <!-- Fila de métricas rápidas -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon bg-lightgreen">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M15 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M12 12v4a2 2 0 0 0 2 2h4"/><path d="M6 18c0-2 2-3 6-3s6 1 6 3"/></svg>
+                                </div>
+                                <span class="trend green">↑ 12% vs mes ant</span>
+                            </div>
+                            <div class="metric-body">
+                                <h3>48</h3>
+                                <p>Ejemplares activos</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon bg-lightpurple">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                </div>
+                                <span class="trend purple">↑ 8% vs mes ant</span>
+                            </div>
+                            <div class="metric-body">
+                                <h3>12</h3>
+                                <p>Reproducciones este mes</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon bg-lightorange">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="2" x2="22" y2="6"/><line x1="7.5" y1="12.5" x2="11.5" y2="16.5"/><outer-path d="M2 22l7.5-7.5"/><path d="M11 13l4-4 3 3-4 4-3-3z"/></svg>
+                                </div>
+                                <span class="trend orange">Pendientes: 3</span>
+                            </div>
+                            <div class="metric-body">
+                                <h3>9</h3>
+                                <p>Vacunaciones</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon bg-lightblue">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </div>
+                                <span class="trend blue">En cuarentena</span>
+                            </div>
+                            <div class="metric-body">
+                                <h3>5</h3>
+                                <p>Cuarentena</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accesos Rápidos Móvil -->
+                    <div class="mobile-quick-access">
+                        <h3>Accesos rápidos</h3>
+                        <div class="quick-icons-grid">
+                            <button class="quick-icon-btn" data-action="sec-ejemplares">
+                                <div class="icon-circle bg-lightgreen"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M15 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M12 12v4a2 2 0 0 0 2 2h4"/><path d="M6 18c0-2 2-3 6-3s6 1 6 3"/></svg></div>
+                                <span>Ejemplares</span>
+                            </button>
+                            <button class="quick-icon-btn" data-action="sec-reproduccion">
+                                <div class="icon-circle bg-lightpurple"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                                <span>Reproducción</span>
+                            </button>
+                            <button class="quick-icon-btn" data-action="sec-vacunacion">
+                                <div class="icon-circle bg-lightorange"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 13l4-4 3 3-4 4-3-3z"/><line x1="18" y1="2" x2="22" y2="6"/></svg></div>
+                                <span>Vacunación</span>
+                            </button>
+                            <button class="quick-icon-btn" data-action="sec-cuarentena">
+                                <div class="icon-circle bg-lightblue"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                                <span>Cuarentena</span>
+                            </button>
+                            <button class="quick-icon-btn" data-action="sec-nacimientos">
+                                <div class="icon-circle bg-lightred"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg></div>
+                                <span>Nacimientos</span>
+                            </button>
+                            <button class="quick-icon-btn" data-action="sec-pesajes">
+                                <div class="icon-circle bg-lightteal"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg></div>
+                                <span>Pesajes</span>
+                            </button>
+                            <button class="quick-icon-btn" data-action="sec-alimentacion">
+                                <div class="icon-circle bg-lightgreen"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/></svg></div>
+                                <span>Alimentación</span>
+                            </button>
+                            <button class="quick-icon-btn" id="open-more-mobile">
+                                <div class="icon-circle bg-lightgrey">✏️</div>
+                                <span>Más</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel central de dos columnas -->
+                    <div class="dashboard-columns">
+                        <!-- Columna Izquierda: Actividad Reciente + Accesos rápidos (Desktop) -->
+                        <div class="col-left">
+                            <div class="card card-widget">
+                                <div class="card-widget-header">
+                                    <h3>Actividad reciente</h3>
+                                    <button class="btn-link">Ver todo</button>
+                                </div>
+                                <div class="activity-timeline">
+                                    <div class="timeline-item">
+                                        <div class="timeline-icon bg-green"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div>
+                                        <div class="timeline-info">
+                                            <h4>Nacimiento registrado</h4>
+                                            <p>6 gazapos - Hembra #15</p>
+                                        </div>
+                                        <span class="time">Hoy, 08:30</span>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-icon bg-purple"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                                        <div class="timeline-info">
+                                            <h4>Servicio registrado</h4>
+                                            <p>Macho #7 x Hembra #12</p>
+                                        </div>
+                                        <span class="time">Ayer, 16:45</span>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-icon bg-orange"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="2" x2="22" y2="6"/></svg></div>
+                                        <div class="timeline-info">
+                                            <h4>Vacunación realizada</h4>
+                                            <p>Macho #3 - VHD</p>
+                                        </div>
+                                        <span class="time">Ayer, 10:15</span>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-icon bg-blue"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/></svg></div>
+                                        <div class="timeline-info">
+                                            <h4>Ingreso a cuarentena</h4>
+                                            <p>Hembra #21</p>
+                                        </div>
+                                        <span class="time">12/07/2025</span>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-icon bg-teal">⚖️</div>
+                                        <div class="timeline-info">
+                                            <h4>Pesaje registrado</h4>
+                                            <p>Macho #8 - 3.2 kg</p>
+                                        </div>
+                                        <span class="time">12/07/2025</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accesos rápidos (Desktop) -->
+                            <div class="card card-widget desktop-only">
+                                <h3>Accesos rápidos</h3>
+                                <div class="quick-actions-row">
+                                    <button class="action-tile bg-green" data-target="sec-ejemplares">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M15 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M12 12v4a2 2 0 0 0 2 2h4"/><path d="M6 18c0-2 2-3 6-3s6 1 6 3"/></svg>
+                                        Nuevo ejemplar
+                                    </button>
+                                    <button class="action-tile bg-purple" data-target="sec-reproduccion">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                        Registrar servicio
+                                    </button>
+                                    <button class="action-tile bg-orange" data-target="sec-vacunacion">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="2" x2="22" y2="6"/><path d="M11 13l4-4 3 3-4 4-3-3z"/></svg>
+                                        Registrar vacuna
+                                    </button>
+                                    <button class="action-tile bg-blue" data-target="sec-cuarentena">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                        Nueva cuarentena
+                                    </button>
+                                    <button class="action-tile bg-teal" data-target="sec-pesajes">
+                                        ⚖️
+                                        Registrar pesaje
+                                    </button>
+                                    <button class="action-tile bg-grey">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                        Subir foto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna Derecha: Gráfico resumen + Tareas y Recordatorios -->
+                        <div class="col-right">
+                            <!-- Gráfico Resumen -->
+                            <div class="card card-widget">
+                                <div class="card-widget-header">
+                                    <h3>Resumen del criadero</h3>
+                                    <select class="select-sm">
+                                        <option>Este mes</option>
+                                        <option>Este año</option>
+                                    </select>
+                                </div>
+                                <div class="chart-box">
+                                    <div class="donut-chart-container">
+                                        <svg width="180" height="180" viewBox="0 0 36 36" class="donut-chart">
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#e2e8f0" stroke-width="3"></circle>
+                                            
+                                            <!-- Machos (12/48 = 25%) -> stroke-dasharray: 25 75, stroke-dashoffset: 100 (25) -->
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#2d8a4e" stroke-width="3.2" stroke-dasharray="25 75" stroke-dashoffset="100"></circle>
+                                            
+                                            <!-- Hembras (18/48 = 37.5%) -> stroke-dasharray: 37.5 62.5, stroke-dashoffset: 75 -->
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#9f7aea" stroke-width="3.2" stroke-dasharray="37.5 62.5" stroke-dashoffset="75"></circle>
+                                            
+                                            <!-- Gazapos (15/48 = 31.25%) -> stroke-dasharray: 31.25 68.75, stroke-dashoffset: 37.5 -->
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#3182ce" stroke-width="3.2" stroke-dasharray="31.25 68.75" stroke-dashoffset="37.5"></circle>
+                                            
+                                            <!-- Crecimiento (3/48 = 6.25%) -> stroke-dasharray: 6.25 93.75, stroke-dashoffset: 6.25 -->
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#dd6b20" stroke-width="3.2" stroke-dasharray="6.25 93.75" stroke-dashoffset="6.25"></circle>
+                                        </svg>
+                                        <div class="donut-center">
+                                            <span class="number">48</span>
+                                            <span class="label">Total</span>
+                                        </div>
+                                    </div>
+                                    <div class="chart-legend">
+                                        <div class="legend-item"><span class="bullet bg-green"></span> Machos reproductores <span class="val">12</span></div>
+                                        <div class="legend-item"><span class="bullet bg-purple"></span> Hembras reproductoras <span class="val">18</span></div>
+                                        <div class="legend-item"><span class="bullet bg-blue"></span> Gazapos <span class="val">15</span></div>
+                                        <div class="legend-item"><span class="bullet bg-orange"></span> Crecimiento <span class="val">3</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Próximas tareas -->
+                            <div class="card card-widget">
+                                <h3>Próximas tareas</h3>
+                                <div class="task-widget-list">
+                                    <div class="task-widget-item">
+                                        <div class="task-icon bg-lightorange text-orange">💉</div>
+                                        <div class="task-details">
+                                            <span class="title">Vacunación pendiente</span>
+                                            <span class="desc">3 ejemplares pendientes de vacunación</span>
+                                        </div>
+                                        <span class="day">Hoy</span>
+                                    </div>
+                                    <div class="task-widget-item">
+                                        <div class="task-icon bg-lightblue text-blue">🛡️</div>
+                                        <div class="task-details">
+                                            <span class="title">Revisión de cuarentena</span>
+                                            <span class="desc">2 ejemplares para revisión</span>
+                                        </div>
+                                        <span class="day">Mañana</span>
+                                    </div>
+                                    <div class="task-widget-item">
+                                        <div class="task-icon bg-lightgreen text-green">⚖️</div>
+                                        <div class="task-details">
+                                            <span class="title">Control de pesos</span>
+                                            <span class="desc">8 ejemplares para pesar</span>
+                                        </div>
+                                        <span class="day">15/07/2025</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recordatorios -->
+                            <div class="card card-widget">
+                                <h3>Recordatorios</h3>
+                                <div class="reminders-list">
+                                    <div class="alert-box alert-success">
+                                        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                        <div class="alert-text">
+                                            <strong>No olvides revisar el estado de salud</strong>
+                                            <p>Revisa diariamente el comportamiento y apetito</p>
+                                        </div>
+                                    </div>
+                                    <div class="alert-box alert-warning">
+                                        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <div class="alert-text">
+                                            <strong>Próxima limpieza general</strong>
+                                            <p>Programada para el 20/07/2025</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 2. SUBPÁGINA: EJEMPLARES -->
+                <section id="sec-ejemplares" class="dashboard-section">
+                    <div class="section-actions-row">
+                        <div class="filter-group">
+                            <button class="btn btn-outline active" data-filter="Todos">Todos</button>
+                            <button class="btn btn-outline" data-filter="Saludable">Saludables</button>
+                            <button class="btn btn-outline" data-filter="Gestación">Gestación</button>
+                            <button class="btn btn-outline" data-filter="Tratamiento">Tratamiento</button>
+                        </div>
+                        <button class="btn btn-primary" id="open-add-rabbit-modal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Registrar ejemplar
+                        </button>
+                    </div>
+
+                    <div class="rabbits-cards-grid" id="rabbits-grid">
+                        <!-- Las tarjetas de conejos se renderizarán aquí -->
+                    </div>
+                </section>
+
+
+                <!-- 3. SUBPÁGINA: REPRODUCCIÓN -->
+                <section id="sec-reproduccion" class="dashboard-section">
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Hembras Disponibles</h2>
+                        </div>
+                        <p class="modal-subtitle" style="margin-bottom:1rem;">Selecciona una coneja para registrar su reproducción</p>
+                        <div class="mini-rabbit-grid" id="breeding-mothers-grid">
+                            <!-- Dinámico: foto, nombre, id, edad y jaula de cada hembra -->
+                        </div>
+                    </div>
+
+                    <div class="card glass" id="breeding-form-card" style="display:none;">
+                        <div class="card-header">
+                            <h2>Registrar Reproducción</h2>
+                        </div>
+                        <p class="modal-subtitle" id="breeding-selected-mother-label" style="margin-bottom:1rem;"></p>
+                        <input type="hidden" id="breed-mother" required>
+                        <form id="breeding-form" class="rabbit-input-grid">
+                            <select id="breed-father" required>
+                                <option value="" disabled selected>Selecciona el padre (Macho)</option>
+                            </select>
+                            <input type="date" id="breed-date" required>
+                            <button type="submit" class="btn btn-primary">Registrar Servicio</button>
+                        </form>
+
+                        <!-- Verificador de consanguinidad: se actualiza al elegir madre/padre -->
+                        <div id="kinship-check-box" class="alert-box" style="display:none; margin-top:1rem;">
+                            <svg class="alert-icon" id="kinship-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            <div class="alert-text">
+                                <strong id="kinship-title">Verificando parentesco...</strong>
+                                <p id="kinship-message"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card glass">
+                        <h3>Historial de Montas / Gestaciones</h3>
+                        <div class="table-container">
+                            <table class="rabbit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Madre</th>
+                                        <th>Padre</th>
+                                        <th>Fecha Monta</th>
+                                        <th>Fecha Parto Est.</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="breeding-list">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 4. SUBPÁGINA: CUARENTENA -->
+                <section id="sec-cuarentena" class="dashboard-section">
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Ejemplares Registrados</h2>
+                        </div>
+                        <p class="modal-subtitle" style="margin-bottom:1rem;">Selecciona un ejemplar para ingresarlo o darlo de alta de cuarentena</p>
+                        <div class="mini-rabbit-grid" id="quarantine-rabbits-grid">
+                            <!-- Dinámico: foto, nombre, id, edad y jaula de cada conejo -->
+                        </div>
+                    </div>
+
+                    <div class="card glass" id="quarantine-form-card" style="display:none;">
+                        <div class="card-header">
+                            <h2>Ingresar a Cuarentena</h2>
+                        </div>
+                        <p class="modal-subtitle" id="quarantine-selected-label" style="margin-bottom:1rem;"></p>
+                        <input type="hidden" id="quar-rabbit-id">
+                        <form id="quarantine-form" class="rabbit-input-grid">
+                            <input type="text" id="quar-reason" placeholder="Motivo de aislamiento" required>
+                            <input type="text" id="quar-treatment" placeholder="Tratamiento / Observación" required>
+                            <button type="submit" class="btn btn-primary">Aislar Ejemplar</button>
+                        </form>
+                    </div>
+
+                    <div class="card glass">
+                        <h3>Registro de Cuarentena Activo</h3>
+                        <div class="table-container">
+                            <table class="rabbit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ejemplar</th>
+                                        <th>Motivo</th>
+                                        <th>Tratamiento</th>
+                                        <th>Fecha Ingreso</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="quarantine-list">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 5. SUBPÁGINA: VACUNACIÓN -->
+                <section id="sec-vacunacion" class="dashboard-section">
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Ejemplares Registrados</h2>
+                        </div>
+                        <p class="modal-subtitle" style="margin-bottom:1rem;">Selecciona un ejemplar de aquí abajo o desde el formulario para vacunarlo</p>
+                        <div class="mini-rabbit-grid" id="vaccine-rabbits-grid">
+                            <!-- Dinámico: foto, nombre, id y edad de cada conejo -->
+                        </div>
+                    </div>
+
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Registrar Vacuna / Tratamiento</h2>
+                        </div>
+                        <form id="vaccine-form" class="rabbit-input-grid">
+                            <select id="vac-rabbit" required>
+                                <option value="" disabled selected>Selecciona el ejemplar</option>
+                            </select>
+                            <input type="text" id="vac-name" placeholder="Vacuna (ej: VHD, Mixomatosis)" required>
+                            <div class="input-with-label">
+                                <label class="label-heading">¿Cuándo?</label>
+                                <select id="vac-type">
+                                    <option value="programada">📅 Programar para más adelante</option>
+                                    <option value="aplicada">✅ Aplicar hoy</option>
+                                </select>
+                            </div>
+                            <div class="input-with-label" id="vac-date-wrapper">
+                                <label class="label-heading" id="vac-date-label">Fecha programada</label>
+                                <input type="date" id="vac-date" required>
+                            </div>
+                            <div class="input-with-label" id="vac-next-wrapper" style="display:none;">
+                                <label class="label-heading">Próxima dosis (opcional)</label>
+                                <input type="date" id="vac-next-date">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+
+                    <div class="card glass">
+                        <h3>Calendario de Vacunaciones</h3>
+                        <div class="table-container">
+                            <table class="rabbit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ejemplar</th>
+                                        <th>Vacuna / Fármaco</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Próxima dosis</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vaccine-list">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- SUBPÁGINA: NACIMIENTOS / REGISTRAR PARTOS -->
+                <section id="sec-nacimientos" class="dashboard-section">
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Madres</h2>
+                        </div>
+                        <p class="modal-subtitle" style="margin-bottom:1rem;">Selecciona una madre para registrar su parto</p>
+                        <div class="mini-rabbit-grid" id="birth-mothers-grid">
+                            <!-- Dinámico: foto, nombre, id, edad y jaula de cada hembra -->
+                        </div>
+                    </div>
+
+                    <div class="card glass" id="birth-form-card" style="display:none;">
+                        <div class="card-header">
+                            <h2>Registrar Parto</h2>
+                        </div>
+                        <p class="modal-subtitle" id="birth-selected-mother-label" style="margin-bottom:1rem;"></p>
+                        <input type="hidden" id="birth-mother-id">
+                        <form id="birth-form" class="rabbit-input-grid">
+                            <div class="input-with-label">
+                                <label class="label-heading">Fecha del parto</label>
+                                <input type="date" id="birth-date" required>
+                            </div>
+                            <div class="input-with-label">
+                                <label class="label-heading">Cantidad de gazapos nacidos vivos</label>
+                                <input type="number" id="birth-live-count" placeholder="Ej: 6" min="0" value="0" required>
+                            </div>
+                            <div class="input-with-label">
+                                <label class="label-heading">Cantidad de gazapos nacidos muertos</label>
+                                <input type="number" id="birth-dead-count" placeholder="Ej: 0" min="0" value="0">
+                            </div>
+                            <input type="text" id="birth-notes" placeholder="Observaciones (opcional)">
+                            <button type="submit" class="btn btn-primary">Registrar Parto</button>
+                        </form>
+                    </div>
+
+                    <div class="card glass" id="birth-gazapos-card" style="display:none;">
+                        <div class="card-header">
+                            <h2>Completar datos de cada cría</h2>
+                        </div>
+                        <p class="modal-subtitle" id="birth-gazapos-subtitle" style="margin-bottom:1rem;"></p>
+                        <div id="birth-gazapos-list" class="gazapo-single-wrap">
+                            <!-- Dinámico: se muestra una sola cría a la vez -->
+                        </div>
+                    </div>
+
+                    <div class="card glass">
+                        <h3>Historial de Partos</h3>
+                        <div class="table-container">
+                            <table class="rabbit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Madre</th>
+                                        <th>Fecha</th>
+                                        <th>Nacidos vivos</th>
+                                        <th>Nacidos muertos</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="births-list">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="sec-destetes" class="dashboard-section">
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Madres con Crías Pendientes de Destete</h2>
+                        </div>
+                        <p class="modal-subtitle" style="margin-bottom:1rem;">Selecciona una madre para ver y destetar sus crías</p>
+                        <div class="mini-rabbit-grid" id="weaning-mothers-grid">
+                            <!-- Dinámico -->
+                        </div>
+                    </div>
+
+                    <div class="card glass" id="weaning-detail-card" style="display:none;">
+                        <div class="card-header">
+                            <h2 id="weaning-mother-title">Crías</h2>
+                        </div>
+                        <div class="mini-rabbit-grid" id="weaning-kits-grid">
+                            <!-- Dinámico -->
+                        </div>
+                        <button class="btn btn-primary" id="confirm-weaning-btn" style="margin-top:1.2rem;">Registrar destete de estas crías</button>
+                    </div>
+                </section>
+
+                <section id="sec-pesajes" class="dashboard-section">
+                    <div class="card glass text-center-placeholder">
+                        <div class="empty-state-icon">⚖️</div>
+                        <h2>Historial de Pesajes</h2>
+                        <p>Lleva un registro gráfico del peso de tus ejemplares para evaluar el rendimiento de alimento.</p>
+                    </div>
+                </section>
+
+                <section id="sec-alimentacion" class="dashboard-section">
+                    <div class="card glass text-center-placeholder">
+                        <div class="empty-state-icon">🥕</div>
+                        <h2>Planes de Alimentación</h2>
+                        <p>Gestiona las raciones diarias y el stock de concentrado, heno y agua para tus conejos.</p>
+                    </div>
+                </section>
+
+                <section id="sec-jaulas" class="dashboard-section">
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Generar Jaulas Automáticamente</h2>
+                        </div>
+                        <p class="modal-subtitle" style="margin-bottom:1rem;">Crea varias jaulas de una sola vez con el formato que definas (ej: A1, A2, A3...). A cada una se le genera automáticamente su código QR.</p>
+                        <form id="cage-bulk-form" class="rabbit-input-grid">
+                            <div class="input-with-label">
+                                <label class="label-heading">Prefijo</label>
+                                <input type="text" id="cage-bulk-prefix" placeholder="Ej: A" required>
+                            </div>
+                            <div class="input-with-label">
+                                <label class="label-heading">Número inicial</label>
+                                <input type="number" id="cage-bulk-start" placeholder="Ej: 1" min="0" value="1" required>
+                            </div>
+                            <div class="input-with-label">
+                                <label class="label-heading">Número final</label>
+                                <input type="number" id="cage-bulk-end" placeholder="Ej: 10" min="0" value="10" required>
+                            </div>
+                            <div class="input-with-label">
+                                <label class="label-heading">Relleno con ceros</label>
+                                <select id="cage-bulk-padding">
+                                    <option value="0">Sin relleno (A1, A2...)</option>
+                                    <option value="2">2 dígitos (A01, A02...)</option>
+                                    <option value="3">3 dígitos (A001, A002...)</option>
+                                </select>
+                            </div>
+                            <input type="text" id="cage-bulk-notes" placeholder="Ubicación / observaciones para todas (opcional)">
+                            <button type="submit" class="btn btn-primary">Generar jaulas</button>
+                        </form>
+                        <p class="modal-subtitle" id="cage-bulk-preview" style="margin-top:0.6rem;"></p>
+                    </div>
+
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h2>Registrar Jaula Individual</h2>
+                        </div>
+                        <form id="cage-form" class="rabbit-input-grid">
+                            <input type="text" id="cage-name" placeholder="Nombre o número de jaula (ej: Jaula A1)" required>
+                            <input type="text" id="cage-notes" placeholder="Ubicación / observaciones (opcional)">
+                            <button type="submit" class="btn btn-primary">Agregar jaula</button>
+                        </form>
+                    </div>
+
+                    <div class="card glass">
+                        <h3>Jaulas Registradas</h3>
+                        <div class="table-container">
+                            <table class="rabbit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Jaula</th>
+                                        <th>Ubicación / Notas</th>
+                                        <th>Ejemplares alojados</th>
+                                        <th>Código QR</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cages-list">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="sec-reportes" class="dashboard-section">
+                    <div class="card glass text-center-placeholder">
+                        <div class="empty-state-icon">📊</div>
+                        <h2>Reportes y Estadísticas Generales</h2>
+                        <p>Gráficos interactivos de natalidad, mortalidad, conversiones de peso y balance general del criadero.</p>
+                    </div>
+                </section>
+
+                <section id="sec-configuracion" class="dashboard-section">
+                    <div class="card glass">
+                        <h2>Configuración del Perfil</h2>
+                        <hr class="divider-line">
+                        <form id="settings-form" class="auth-form" style="max-width: 400px; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label class="label-heading">Nombre del Criadero / Administrador</label>
+                                <input type="text" id="settings-name" class="input-flat" value="Kevin">
+                            </div>
+                            <div class="form-group">
+                                <label class="label-heading">Correo de contacto</label>
+                                <input type="email" id="settings-email" class="input-flat" value="kevin@example.com" disabled>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Guardar Cambios</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- SUBPÁGINA: ADMINISTRACIÓN (SOLO SUPERADMIN) -->
+                <section id="sec-administracion" class="dashboard-section superadmin-only" style="display:none;">
+                    <div class="card glass">
+                        <div class="section-actions-row">
+                            <div>
+                                <h2 style="margin:0;">Usuarios registrados</h2>
+                                <p class="modal-subtitle" style="margin:0.2rem 0 0 0;">Total: <strong id="admin-users-count">0</strong></p>
+                            </div>
+                            <div class="search-bar" style="max-width:260px;">
+                                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" id="admin-users-search" placeholder="Buscar por nombre o correo...">
+                            </div>
+                        </div>
+
+                        <div class="admin-table-wrapper">
+                            <table class="admin-users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Correo</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th>Verificación</th>
+                                        <th>Registrado</th>
+                                        <th>Último ingreso</th>
+                                        <th>Conejos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-users-tbody">
+                                    <!-- Se rellena dinámicamente con JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Footer Desktop -->
+            <footer class="desktop-footer">
+                <p>ConejosApp © 2026 • Tu Criadero Inteligente • Creado con ❤️</p>
+            </footer>
+        </div>
+
+        <!-- BARRA DE NAVEGACIÓN INFERIOR (MÓVIL) -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-target="sec-inicio">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-btn" data-target="sec-ejemplares">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M15 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M12 12v4a2 2 0 0 0 2 2h4"/></svg>
+                <span>Ejemplares</span>
+            </button>
+            <button class="nav-btn-floating" id="floating-add-btn" aria-label="Agregar nuevo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button class="nav-btn" data-target="sec-reportes">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Reportes</span>
+            </button>
+            <button class="nav-btn" id="mobile-more-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                <span>Más</span>
+            </button>
+        </nav>
+    </div>
+
+
+    <!-- ================= MODAL REGISTRAR / EDITAR CONEJO (EJEMPLAR) ================= -->
+    <!-- ================= MODAL CÓDIGO QR DE JAULA ================= -->
+    <div id="cage-qr-modal" class="modal-overlay">
+        <div class="social-modal-card" id="cage-qr-print-area">
+            <h3 id="cage-qr-title">Jaula</h3>
+            <p class="modal-subtitle" id="cage-qr-subtitle">Código para identificación y escaneo</p>
+            <div id="cage-qr-image-wrap" style="display:flex; justify-content:center; margin:1rem 0;"></div>
+            <div style="display:flex; gap:0.5rem; margin-top:0.5rem;" class="no-print">
+                <button type="button" class="btn btn-secondary btn-block" id="close-cage-qr-modal">Cerrar</button>
+                <button type="button" class="btn btn-primary btn-block" id="print-cage-qr-btn">Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-rabbit-modal" class="modal-overlay">
+        <div class="social-modal-card">
+            <h3 id="add-rabbit-modal-title">Registrar Ejemplar</h3>
+            <p class="modal-subtitle" id="add-rabbit-modal-subtitle">Añadir nuevo conejo al inventario</p>
+            
+            <form id="add-rabbit-form" class="auth-form">
+                <!-- Guarda el id del conejo cuando el formulario se usa para editar -->
+                <input type="hidden" id="modal-rabbit-id" value="">
+
+                <!-- Foto del conejo -->
+                <div class="form-group">
+                    <label class="label-heading">Foto (opcional)</label>
+                    <div class="photo-upload-wrapper">
+                        <img id="modal-rabbit-photo-preview" class="photo-preview" src="" alt="Vista previa" style="display:none;">
+                        <div id="modal-rabbit-photo-placeholder" class="photo-preview-placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        </div>
+                        <div class="photo-upload-actions">
+                            <label for="modal-rabbit-photo" class="btn btn-outline btn-sm photo-upload-btn">Elegir foto</label>
+                            <button type="button" id="modal-rabbit-photo-remove" class="btn btn-outline btn-sm" style="display:none;">Quitar</button>
+                        </div>
+                        <input type="file" id="modal-rabbit-photo" accept="image/*" style="display:none;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="modal-rabbit-name" placeholder="Nombre / Código del conejo" required class="input-icon-wrapper input" style="padding-left:1rem;">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="modal-rabbit-breed" placeholder="Raza (ej: Neozelandés, Leonés)" required class="input-icon-wrapper input" style="padding-left:1rem;">
+                </div>
+                <div class="form-group">
+                    <select id="modal-rabbit-status" class="input-icon-wrapper input" style="padding-left:1rem; cursor:pointer;">
+                        <option value="Saludable">🟢 Saludable</option>
+                        <option value="Gestación">🟡 En Gestación</option>
+                        <option value="Tratamiento">🔴 En Tratamiento</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="modal-rabbit-gender" class="input-icon-wrapper input" style="padding-left:1rem; cursor:pointer;">
+                        <option value="Macho">♂️ Macho reproductor</option>
+                        <option value="Hembra">♀️ Hembra reproductora</option>
+                        <option value="Gazapo">🐰 Gazapo / Cría</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-heading">Jaula asignada</label>
+                    <select id="modal-rabbit-cage" class="input-icon-wrapper input" style="padding-left:1rem; cursor:pointer;">
+                        <option value="">Sin asignar</option>
+                    </select>
+                </div>
+
+                <!-- Fecha de nacimiento y peso: permiten calcular edad y comparar con el peso esperado -->
+                <div class="form-group">
+                    <label class="label-heading">Fecha de nacimiento (opcional)</label>
+                    <input type="date" id="modal-rabbit-birthdate" class="input-icon-wrapper input" style="padding-left:1rem;">
+                </div>
+                <div class="form-group">
+                    <label class="label-heading">Peso actual en kg (opcional)</label>
+                    <input type="number" id="modal-rabbit-weight" placeholder="Ej: 1.8" step="0.01" min="0" class="input-icon-wrapper input" style="padding-left:1rem;">
+                </div>
+
+                <!-- Parentesco: permite vincular madre y padre para el control de consanguinidad -->
+                <div class="form-group">
+                    <label class="label-heading">Madre (opcional)</label>
+                    <select id="modal-rabbit-mother" class="input-icon-wrapper input" style="padding-left:1rem; cursor:pointer;">
+                        <option value="">Desconocida / Externa</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="label-heading">Padre (opcional)</label>
+                    <select id="modal-rabbit-father" class="input-icon-wrapper input" style="padding-left:1rem; cursor:pointer;">
+                        <option value="">Desconocido / Externo</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                    <button type="button" class="btn btn-secondary btn-block" id="close-add-rabbit-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-block" id="add-rabbit-submit-btn">Aceptar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ================= MODAL FICHA DE EJEMPLAR (DETALLE Y ÁRBOL GENEALÓGICO) ================= -->
+    <div id="rabbit-detail-modal" class="modal-overlay">
+        <div class="social-modal-card modal-wide rabbit-detail-card">
+
+            <!-- Cabecera fija: nombre, código y estado -->
+            <div class="detail-modal-header">
+                <h3 id="detail-rabbit-name">Nombre del conejo</h3>
+                <span id="detail-rabbit-status" class="status-tag status-saludable">Estado</span>
+            </div>
+
+            <!-- Pestañas de navegación (fijas, scroll horizontal en móvil) -->
+            <div class="detail-tabs" id="detail-tabs" role="tablist">
+                <button type="button" class="detail-tab active" data-tab="info" role="tab">Información</button>
+                <button type="button" class="detail-tab" data-tab="salud" role="tab">Salud</button>
+                <button type="button" class="detail-tab" data-tab="reproduccion" role="tab">Reproducción</button>
+                <button type="button" class="detail-tab" data-tab="vacunas" role="tab">Vacunas</button>
+                <button type="button" class="detail-tab" data-tab="historial" role="tab">Historial</button>
+                <button type="button" class="detail-tab" data-tab="observaciones" role="tab">Observaciones</button>
+            </div>
+
+            <!-- Contenido de cada pestaña: única zona con scroll interno -->
+            <div class="detail-tab-content" id="detail-tab-content">
+
+                <!-- ===== INFORMACIÓN ===== -->
+                <div class="detail-tab-panel active" data-panel="info">
+                    <div class="detail-photo-container">
+                        <img id="detail-rabbit-photo" class="detail-photo" src="" alt="Foto del conejo" style="display:none;">
+                    </div>
+                    <p class="modal-subtitle" id="detail-rabbit-meta">Raza • Categoría</p>
+                    <div class="detail-stats-row" id="detail-stats-row">
+                        <!-- Se rellena dinámicamente con edad, peso y peso esperado -->
+                    </div>
+                    <div class="detail-info-list" id="detail-info-extra">
+                        <!-- Se rellena dinámicamente: jaula, fecha de nacimiento, código -->
+                    </div>
+                </div>
+
+                <!-- ===== SALUD ===== -->
+                <div class="detail-tab-panel" data-panel="salud">
+                    <div id="detail-health-section">
+                        <!-- Se rellena dinámicamente: estado actual + historial de cuarentena/tratamientos -->
+                    </div>
+                </div>
+
+                <!-- ===== REPRODUCCIÓN ===== -->
+                <div class="detail-tab-panel" data-panel="reproduccion">
+                    <div class="pedigree-tree" id="detail-pedigree-tree">
+                        <!-- Se rellena dinámicamente con JS -->
+                    </div>
+                    <div id="detail-breeding-section">
+                        <!-- Se rellena dinámicamente: montas y camadas relacionadas -->
+                    </div>
+                </div>
+
+                <!-- ===== VACUNAS ===== -->
+                <div class="detail-tab-panel" data-panel="vacunas">
+                    <div class="detail-vaccine-section" id="detail-vaccine-section">
+                        <!-- Se rellena dinámicamente: dosis dadas y próximas dosis -->
+                    </div>
+                </div>
+
+                <!-- ===== HISTORIAL ===== -->
+                <div class="detail-tab-panel" data-panel="historial">
+                    <div id="detail-history-section">
+                        <!-- Se rellena dinámicamente: línea de tiempo con todos los eventos del ejemplar -->
+                    </div>
+                </div>
+
+                <!-- ===== OBSERVACIONES ===== -->
+                <div class="detail-tab-panel" data-panel="observaciones">
+                    <label for="detail-observations-input" class="pedigree-gen-label">Notas del criador</label>
+                    <textarea id="detail-observations-input" class="observations-textarea" rows="8" placeholder="Escribe aquí cualquier observación sobre este ejemplar: comportamiento, alimentación, incidencias, etc."></textarea>
+                    <button type="button" class="btn btn-primary btn-block" id="save-observations-btn" style="margin-top:0.8rem;">Guardar observaciones</button>
+                    <p class="empty-dose-text" id="observations-saved-msg" style="display:none; text-align:center; margin-top:0.6rem;">Observaciones guardadas ✓</p>
+                </div>
+
+            </div>
+
+            <!-- Pie fijo -->
+            <div class="detail-modal-footer">
+                <button type="button" class="btn btn-secondary btn-block" id="close-rabbit-detail-modal">Cerrar</button>
+                <button type="button" class="btn btn-primary btn-block" id="edit-rabbit-from-detail-btn">Editar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= MODAL MENÚ MÁS (MÓVIL) ================= -->
+    <div id="more-menu-modal" class="modal-overlay">
+        <div class="social-modal-card" style="max-height: 80vh; overflow-y: auto;">
+            <h3>Secciones adicionales</h3>
+            <p class="modal-subtitle" style="margin-bottom:1rem;">Ir a otra sección del criadero</p>
+            
+            <div class="mobile-more-grid">
+                <button class="more-grid-item" data-target="sec-reproduccion">❤️ Reproducción</button>
+                <button class="more-grid-item" data-target="sec-cuarentena">🛡️ Cuarentena</button>
+                <button class="more-grid-item" data-target="sec-vacunacion">💉 Vacunación</button>
+                <button class="more-grid-item" data-target="sec-nacimientos">🐣 Nacimientos</button>
+                <button class="more-grid-item" data-target="sec-destetes">🌾 Destetes</button>
+                <button class="more-grid-item" data-target="sec-pesajes">⚖️ Pesajes</button>
+                <button class="more-grid-item" data-target="sec-alimentacion">🥕 Alimentación</button>
+                <button class="more-grid-item" data-target="sec-jaulas">🏠 Jaulas</button>
+                <button class="more-grid-item" data-target="sec-configuracion">⚙️ Configuración</button>
+                <button class="more-grid-item superadmin-only" data-target="sec-administracion" style="display:none;">👑 Administración</button>
+            </div>
+            
+            <button class="btn btn-secondary btn-block" id="logout-btn-mobile" style="margin-top:1.5rem; color:var(--danger); font-weight:700;">
+                Salir de la aplicación
+            </button>
+            <button class="btn btn-outline btn-block" id="close-more-modal" style="margin-top:0.5rem;">Cerrar</button>
+        </div>
+    </div>
+
+
+    <!-- ================= MODAL SIMULADO DE LOGIN SOCIAL ================= -->
+    <div id="social-modal" class="modal-overlay">
+        <div class="social-modal-card">
+            <div id="modal-loading" class="modal-loading-content">
+                <div class="spinner"></div>
+                <h3 id="modal-loading-text">Conectando...</h3>
+                <p>Por favor espera un momento.</p>
+            </div>
+            
+            <div id="modal-account-select" class="modal-select-content" style="display: none;">
+                <div class="modal-social-header" id="modal-social-header-brand">
+                    <!-- Dinámico -->
+                </div>
+                <h3>Elige una cuenta</h3>
+                <p class="modal-subtitle">para continuar en <strong>ConejosApp</strong></p>
+                
+                <div class="account-list">
+                    <button class="account-row" data-name="Kevin Gómez" data-email="kevin.gomez@gmail.com">
+                        <div class="avatar">K</div>
+                        <div class="account-details">
+                            <span class="name">Kevin Gómez</span>
+                            <span class="email">kevin.gomez@gmail.com</span>
+                        </div>
+                    </button>
+                    <button class="account-row" data-name="Criadero El Bosque" data-email="criadero.bosque@outlook.com">
+                        <div class="avatar">C</div>
+                        <div class="account-details">
+                            <span class="name">Criadero El Bosque</span>
+                            <span class="email">criadero.bosque@outlook.com</span>
+                        </div>
+                    </button>
+                </div>
+                
+                <button type="button" class="btn btn-secondary btn-block" id="close-modal-btn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL RECUPERAR / CAMBIAR CONTRASEÑA ================= -->
+    <!-- ================= PANTALLA: RECUPERAR CONTRASEÑA (independiente) ================= -->
+    <div id="recover-screen" class="screen">
+        <div class="screen-content form-container-screen">
+            <button id="back-to-login-from-recover" class="back-btn" aria-label="Volver atrás">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </button>
+
+            <div class="header-logo-container">
+                <svg class="rabbit-logo-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 95 C25 95 10 75 10 50 C10 25 25 15 45 15 C45 15 43 5 48 5 C53 5 56 18 58 22 C63 12 70 8 74 10 C78 12 74 25 71 31 C85 36 90 48 90 60 C90 80 75 95 50 95 Z" fill="none" stroke="#2d8a4e" stroke-width="4" stroke-linejoin="round"/>
+                </svg>
+                <h2>Recuperar contraseña</h2>
+                <p class="subtitle">Ingresa tu correo y elige una nueva contraseña 💚</p>
+            </div>
+
+            <form id="reset-password-form" class="auth-form">
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <input type="email" id="reset-email" placeholder="Correo electrónico" required autocomplete="email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input type="password" id="reset-new-password" placeholder="Nueva contraseña" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input type="password" id="reset-new-password-confirm" placeholder="Confirmar nueva contraseña" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Actualizar contraseña
+                </button>
+            </form>
+
+            <p class="auth-switch-text">¿La recordaste? <a href="#" id="go-to-login-from-recover">Iniciar sesión</a></p>
+        </div>
+    </div>
+
+    <!-- ================= MODAL PERFIL COMPLETO DE USUARIO (SUPERADMIN) ================= -->
+    <div id="admin-profile-modal" class="modal-overlay">
+        <div class="social-modal-card">
+            <h3>Perfil del usuario</h3>
+            <p class="modal-subtitle" style="margin-bottom:1rem;">Información completa del registro</p>
+
+            <div class="admin-profile-details">
+                <div class="admin-profile-row"><span>Nombre</span><strong id="admin-profile-name">—</strong></div>
+                <div class="admin-profile-row"><span>Correo</span><strong id="admin-profile-email">—</strong></div>
+                <div class="admin-profile-row"><span>Rol</span><strong id="admin-profile-role">—</strong></div>
+                <div class="admin-profile-row"><span>Estado</span><strong id="admin-profile-status">—</strong></div>
+                <div class="admin-profile-row"><span>Verificado</span><strong id="admin-profile-verified">—</strong></div>
+                <div class="admin-profile-row"><span>Registrado el</span><strong id="admin-profile-created">—</strong></div>
+                <div class="admin-profile-row"><span>Último ingreso</span><strong id="admin-profile-lastlogin">—</strong></div>
+                <div class="admin-profile-row"><span>Ejemplares registrados</span><strong id="admin-profile-rabbits">—</strong></div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" id="close-admin-profile-modal" style="margin-top:1.5rem;">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- JS Lógica -->
+    <script src="qrcode.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
