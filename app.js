@@ -179,91 +179,21 @@ document.addEventListener('click', () => {
     profilePopover.classList.remove('active');
 });
 
-// ================= BASE DE DATOS DE USUARIOS (REGISTRO / LOGIN / SUPERADMIN) =================
-// Esta es una base de datos simulada en el propio navegador (localStorage), ya que la
-// aplicación no tiene un servidor backend. Todo lo que se registra queda guardado en
-// este dispositivo/navegador. Para un uso en producción con varios dispositivos
-// se recomienda migrar esto a una base de datos real en un servidor.
-const USERS_DB_KEY = 'conejosapp_users_db';
+// ================= CONEXIÓN SUPABASE: AUTENTICACIÓN =================
+// El registro, login, recuperación de contraseña y sesión ahora usan
+// Supabase Auth (supabaseClient ya está creado arriba). Los datos extra
+// del usuario (nombre, rol, estado, verificación) viven en la tabla
+// "profiles", que se crea sola al registrarse (ver trigger SQL adjunto).
 const SUPERADMIN_EMAIL = 'admin@conejosapp.com';
-const SUPERADMIN_PASSWORD = 'Admin2026#';
 
-// Hash simple (NO es criptografía real) solo para no guardar la contraseña
-// tal cual en el almacenamiento local. Con un backend real esto debe hacerse
-// con bcrypt/argon2 en el servidor.
-function hashPassword(password) {
-    const str = 'conejosapp_salt::' + String(password);
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0;
-    }
-    return 'h' + Math.abs(hash).toString(36) + '_' + str.length;
-}
-
-function createUserRecord({ name, email, password, role = 'user', status = 'active', verified = false }) {
-    return {
-        id: 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
-        name,
-        email,
-        passwordHash: hashPassword(password),
-        role,
-        status,
-        verified,
-        createdAt: new Date().toISOString(),
-        lastLoginAt: null
-    };
-}
-
-// Carga la base de datos de usuarios, migra datos del sistema anterior (si existen)
-// y garantiza que siempre exista una cuenta de Super Administrador.
-function loadUsersDB() {
-    let db = [];
-    try {
-        db = JSON.parse(localStorage.getItem(USERS_DB_KEY)) || [];
-    } catch (e) {
-        db = [];
-    }
-
-    // Migración desde el sistema de usuarios anterior (más simple e inestable)
-    try {
-        const legacy = JSON.parse(localStorage.getItem('conejos_users')) || [];
-        let migrated = false;
-        legacy.forEach(u => {
-            if (u && u.email && !db.find(x => x.email === u.email.toLowerCase())) {
-                db.push(createUserRecord({ name: u.name || 'Usuario', email: u.email.toLowerCase(), password: u.password || '' }));
-                migrated = true;
-            }
-        });
-        if (migrated || legacy.length) localStorage.removeItem('conejos_users');
-    } catch (e) { /* nada que migrar */ }
-
-    // Asegurar que exista la cuenta superadministradora
-    if (!db.find(u => u.role === 'superadmin')) {
-        db.push(createUserRecord({
-            name: 'Super Administrador',
-            email: SUPERADMIN_EMAIL,
-            password: SUPERADMIN_PASSWORD,
-            role: 'superadmin',
-            status: 'active',
-            verified: true
-        }));
-    }
-
-    localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
-    return db;
-}
-
-function saveUsersDB(db) {
-    localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
-}
+let currentProfile = null; // perfil (tabla profiles) del usuario con sesión activa
 
 // ================= REGISTRO E INICIO DE SESIÓN =================
 const registerForm = document.getElementById('register-form');
 const loginForm = document.getElementById('login-form');
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-registerForm.addEventListener('submit', (e) => {
+registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('reg-name').value.trim();
     const email = document.getElementById('reg-email').value.trim().toLowerCase();
@@ -287,50 +217,60 @@ registerForm.addEventListener('submit', (e) => {
         return;
     }
 
-    const db = loadUsersDB();
-    if (db.find(u => u.email === email)) {
-        // Mensaje claro: el correo ya existe, así que debe cambiar/recuperar su contraseña
-        alert('Ese correo electrónico ya está registrado. Debes cambiar tu contraseña para volver a ingresar: usa la opción "¿Olvidaste tu contraseña?" en la pantalla de inicio de sesión.');
-        showScreen('login-screen');
-        document.getElementById('login-email').value = email;
+    const submitBtn = registerForm.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: { data: { name } }
+    });
+
+    if (submitBtn) submitBtn.disabled = false;
+
+    if (error) {
+        if (error.message && error.message.toLowerCase().includes('already registered')) {
+            alert('Ese correo electrónico ya está registrado. Debes cambiar tu contraseña para volver a ingresar: usa la opción "¿Olvidaste tu contraseña?" en la pantalla de inicio de sesión.');
+            showScreen('login-screen');
+            document.getElementById('login-email').value = email;
+        } else {
+            alert('No se pudo completar el registro: ' + error.message);
+        }
         return;
     }
 
-    const newUser = createUserRecord({ name, email, password });
-    newUser.lastLoginAt = new Date().toISOString();
-    db.push(newUser);
-    saveUsersDB(db);
-
-    loginUser(newUser);
     registerForm.reset();
+
+    if (data.session) {
+        // Si la confirmación por correo está desactivada en el proyecto,
+        // Supabase ya entrega una sesión activa acá mismo.
+        await handleSignedIn();
+    } else {
+        alert('¡Cuenta creada! Te enviamos un correo de confirmación. Confirmá tu cuenta y después iniciá sesión.');
+        showScreen('login-screen');
+        document.getElementById('login-email').value = email;
+    }
 });
 
-loginForm.addEventListener('submit', (e) => {
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim().toLowerCase();
     const password = document.getElementById('login-password').value;
 
-    const db = loadUsersDB();
-    const userObj = db.find(u => u.email === email);
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
 
-    if (!userObj) {
-        alert('No encontramos ninguna cuenta con ese correo electrónico. Verifica que esté bien escrito o regístrate.');
-        return;
-    }
-    if (userObj.status === 'blocked') {
-        alert('Esta cuenta fue bloqueada por un administrador. Comunícate con el responsable del criadero.');
-        return;
-    }
-    if (userObj.passwordHash !== hashPassword(password)) {
-        alert('La contraseña ingresada es incorrecta. Si no la recuerdas, usa "¿Olvidaste tu contraseña?" para cambiarla.');
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (submitBtn) submitBtn.disabled = false;
+
+    if (error) {
+        alert('No pudimos iniciar sesión: correo o contraseña incorrectos.');
         return;
     }
 
-    userObj.lastLoginAt = new Date().toISOString();
-    saveUsersDB(db);
-
-    loginUser(userObj);
-    loginForm.reset();
+    const ok = await handleSignedIn();
+    if (ok) loginForm.reset();
 });
 
 // --- Recuperar / cambiar contraseña (pantalla independiente) ---
@@ -338,25 +278,31 @@ const forgotPasswordLink = document.getElementById('forgot-password-link');
 const resetPasswordForm = document.getElementById('reset-password-form');
 
 if (forgotPasswordLink) {
-    forgotPasswordLink.addEventListener('click', (e) => {
+    forgotPasswordLink.addEventListener('click', async (e) => {
         e.preventDefault();
         const currentEmail = document.getElementById('login-email').value.trim();
-        document.getElementById('reset-email').value = currentEmail;
-        showScreen('recover-screen');
+        if (!EMAIL_PATTERN.test(currentEmail)) {
+            document.getElementById('reset-email').value = currentEmail;
+            showScreen('recover-screen');
+            return;
+        }
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(currentEmail, {
+            redirectTo: window.location.href
+        });
+        if (error) {
+            alert('No pudimos enviar el correo de recuperación: ' + error.message);
+        } else {
+            alert('Te enviamos un correo con un enlace para cambiar tu contraseña. Abrilo desde este mismo dispositivo/navegador.');
+        }
     });
 }
 
 if (resetPasswordForm) {
-    resetPasswordForm.addEventListener('submit', (e) => {
+    resetPasswordForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('reset-email').value.trim().toLowerCase();
         const newPassword = document.getElementById('reset-new-password').value;
         const newPasswordConfirm = document.getElementById('reset-new-password-confirm').value;
 
-        if (!EMAIL_PATTERN.test(email)) {
-            alert('Ingresa un correo electrónico válido.');
-            return;
-        }
         if (newPassword.length < 6) {
             alert('La nueva contraseña debe tener al menos 6 caracteres.');
             return;
@@ -366,58 +312,106 @@ if (resetPasswordForm) {
             return;
         }
 
-        const db = loadUsersDB();
-        const userObj = db.find(u => u.email === email);
-        if (!userObj) {
-            alert('No encontramos ninguna cuenta con ese correo electrónico.');
-            return;
-        }
-        if (userObj.status === 'blocked') {
-            alert('Esta cuenta está bloqueada. Comunícate con el administrador.');
+        const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+        if (error) {
+            alert('No se pudo actualizar la contraseña: ' + error.message + '\nProbá pedir el enlace de recuperación de nuevo desde "¿Olvidaste tu contraseña?".');
             return;
         }
 
-        userObj.passwordHash = hashPassword(newPassword);
-        saveUsersDB(db);
-
-        alert('Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión con la nueva contraseña.');
+        alert('Tu contraseña se actualizó correctamente.');
         showScreen('login-screen');
         resetPasswordForm.reset();
-        document.getElementById('login-email').value = email;
     });
 }
+
+// Cuando se abre el enlace de recuperación que llega por correo, Supabase
+// dispara el evento PASSWORD_RECOVERY: mostramos la pantalla para definir
+// la nueva contraseña.
+supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        showScreen('recover-screen');
+    }
+});
 
 // --- Ya no existe el acceso como invitado: el contenido de la app nunca debe
 // ser visible para usuarios que no iniciaron sesión. ---
 
-function loginUser(user) {
-    if (!user) return; // Ya no se admite un usuario "Invitado" implícito
-    if (!user.name) user.name = user.email;
+// Se ejecuta cada vez que hay una sesión válida (login, registro o sesión
+// restaurada al recargar la página). Carga el perfil desde la tabla
+// "profiles", corta el paso si la cuenta está bloqueada, y muestra el
+// dashboard.
+async function handleSignedIn() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return false;
 
-    localStorage.setItem('conejos_session', JSON.stringify(user));
-    
-    const shortName = user.name.split(' ')[0];
-    
-    // Rellenar datos en la interfaz
+    let { data: profile, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (!profile && !error) {
+        // Red de seguridad por si el trigger de creación de perfil no corrió
+        const { data: inserted } = await supabaseClient
+            .from('profiles')
+            .insert({
+                id: user.id,
+                name: user.user_metadata?.name || user.email,
+                email: user.email,
+                role: user.email === SUPERADMIN_EMAIL ? 'superadmin' : 'user'
+            })
+            .select()
+            .maybeSingle();
+        profile = inserted;
+    }
+
+    if (!profile) {
+        alert('No pudimos cargar tu perfil. Intentá de nuevo.');
+        await supabaseClient.auth.signOut();
+        return false;
+    }
+
+    if (profile.status === 'blocked') {
+        alert('Esta cuenta fue bloqueada por un administrador. Comunícate con el responsable del criadero.');
+        await supabaseClient.auth.signOut();
+        return false;
+    }
+
+    supabaseClient
+        .from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', user.id)
+        .then(() => {});
+
+    currentProfile = profile;
+    await loginUser(profile);
+    return true;
+}
+
+async function loginUser(profile) {
+    if (!profile) return;
+    if (!profile.name) profile.name = profile.email;
+
+    const shortName = profile.name.split(' ')[0];
+
     const sidebarUser = document.getElementById('sidebar-user-name');
     if (sidebarUser) sidebarUser.textContent = shortName;
-    
-    document.querySelectorAll('.user-name-placeholder').forEach(el => el.textContent = shortName);
-    
-    const settingsName = document.getElementById('settings-name');
-    if (settingsName) settingsName.value = user.name;
-    const settingsEmail = document.getElementById('settings-email');
-    if (settingsEmail) settingsEmail.value = user.email;
 
-    // Mostrar el panel de Super Administrador solo si la sesión tiene ese rol
-    const isSuperadmin = user.role === 'superadmin';
+    document.querySelectorAll('.user-name-placeholder').forEach(el => el.textContent = shortName);
+
+    const settingsName = document.getElementById('settings-name');
+    if (settingsName) settingsName.value = profile.name;
+    const settingsEmail = document.getElementById('settings-email');
+    if (settingsEmail) settingsEmail.value = profile.email;
+
+    const isSuperadmin = profile.role === 'superadmin';
     document.querySelectorAll('.superadmin-only').forEach(el => {
         el.style.display = isSuperadmin ? '' : 'none';
     });
     const roleLabel = document.querySelector('.profile-widget .role');
-    if (roleLabel) roleLabel.textContent = isSuperadmin ? 'Super Administrador' : (user.isGuest ? 'Invitado' : 'Administrador');
+    if (roleLabel) roleLabel.textContent = isSuperadmin ? 'Super Administrador' : 'Administrador';
 
-    loadUserAppData();
+    await loadUserAppData();
     if (isSuperadmin) renderAdminUsersTable();
     showScreen('app-dashboard');
     showSubPage('sec-inicio');
@@ -425,26 +419,22 @@ function loginUser(user) {
 
 const settingsForm = document.getElementById('settings-form');
 if (settingsForm) {
-    settingsForm.addEventListener('submit', (e) => {
+    settingsForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newName = document.getElementById('settings-name').value.trim();
-        if (!newName) return;
+        if (!newName || !currentProfile) return;
 
-        const sessionStr = localStorage.getItem('conejos_session');
-        if (!sessionStr) return;
-        const session = JSON.parse(sessionStr);
-        session.name = newName;
-        localStorage.setItem('conejos_session', JSON.stringify(session));
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update({ name: newName })
+            .eq('id', currentProfile.id);
 
-        if (!session.isGuest) {
-            const db = loadUsersDB();
-            const dbUser = db.find(u => u.email === session.email);
-            if (dbUser) {
-                dbUser.name = newName;
-                saveUsersDB(db);
-            }
+        if (error) {
+            alert('No se pudo guardar el cambio: ' + error.message);
+            return;
         }
 
+        currentProfile.name = newName;
         const shortName = newName.split(' ')[0];
         const sidebarUser = document.getElementById('sidebar-user-name');
         if (sidebarUser) sidebarUser.textContent = shortName;
@@ -456,7 +446,8 @@ if (settingsForm) {
 
 // Logouts
 function executeLogout() {
-    localStorage.removeItem('conejos_session');
+    currentProfile = null;
+    supabaseClient.auth.signOut();
     showScreen('welcome-screen');
 }
 document.getElementById('logout-btn-desktop').addEventListener('click', executeLogout);
@@ -464,21 +455,27 @@ document.getElementById('logout-btn-mobile').addEventListener('click', executeLo
 
 // ================= PANEL DE SUPERADMINISTRADOR =================
 // Permite ver todos los usuarios registrados, bloquearlos/desbloquearlos,
-// verificarlos y ver el perfil completo de cada uno.
-function renderAdminUsersTable() {
+// verificarlos y ver el perfil completo de cada uno. Requiere que la
+// política RLS de "profiles" le permita a un superadmin leer/editar todas
+// las filas (ver SQL adjunto).
+async function renderAdminUsersTable() {
     const tbody = document.getElementById('admin-users-tbody');
     if (!tbody) return;
 
-    const db = loadUsersDB();
+    const { data: users, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error || !users) return;
+
     tbody.innerHTML = '';
 
-    const sorted = db.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    sorted.forEach(u => {
+    for (const u of users) {
         const row = document.createElement('tr');
-        const rabbitCount = getUserRabbitCount(u.email);
-        const regDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-ES') : '—';
-        const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('es-ES') : 'Nunca';
+        const rabbitCount = await getUserRabbitCount(u.id);
+        const regDate = u.created_at ? new Date(u.created_at).toLocaleDateString('es-ES') : '—';
+        const lastLogin = u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('es-ES') : 'Nunca';
 
         const statusBadge = u.status === 'blocked'
             ? '<span class="status-tag status-tratamiento">Bloqueado</span>'
@@ -529,54 +526,52 @@ function renderAdminUsersTable() {
         }
 
         tbody.appendChild(row);
-    });
+    }
 
     const countEl = document.getElementById('admin-users-count');
-    if (countEl) countEl.textContent = String(db.length);
+    if (countEl) countEl.textContent = String(users.length);
 }
 
-function getUserRabbitCount(email) {
-    try {
-        return (JSON.parse(localStorage.getItem(`rabbits_${email}`)) || []).length;
-    } catch (e) {
-        return 0;
-    }
+async function getUserRabbitCount(userId) {
+    const { data, error } = await supabaseClient
+        .from('app_data')
+        .select('rabbits')
+        .eq('user_id', userId)
+        .maybeSingle();
+    if (error || !data) return 0;
+    return (data.rabbits || []).length;
 }
 
-function toggleUserField(userId, field, value) {
-    const db = loadUsersDB();
-    const u = db.find(x => x.id === userId);
-    if (!u) return;
-    u[field] = value;
-    saveUsersDB(db);
+async function toggleUserField(userId, field, value) {
+    const { error } = await supabaseClient
+        .from('profiles')
+        .update({ [field]: value })
+        .eq('id', userId);
 
-    // Si se bloquea a un usuario que tiene sesión abierta en este navegador, se lo desconecta
-    const sessionStr = localStorage.getItem('conejos_session');
-    if (sessionStr) {
-        try {
-            const session = JSON.parse(sessionStr);
-            if (session && session.email === u.email && field === 'status' && value === 'blocked') {
-                localStorage.removeItem('conejos_session');
-            }
-        } catch (e) { /* ignorar */ }
+    if (error) {
+        alert('No se pudo actualizar: ' + error.message);
+        return;
     }
 
     renderAdminUsersTable();
 }
 
-function openAdminProfileModal(userId) {
-    const db = loadUsersDB();
-    const u = db.find(x => x.id === userId);
-    if (!u) return;
+async function openAdminProfileModal(userId) {
+    const { data: u, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+    if (error || !u) return;
 
     document.getElementById('admin-profile-name').textContent = u.name;
     document.getElementById('admin-profile-email').textContent = u.email;
     document.getElementById('admin-profile-role').textContent = u.role === 'superadmin' ? 'Super Administrador' : 'Usuario';
     document.getElementById('admin-profile-status').textContent = u.status === 'blocked' ? 'Bloqueado' : 'Activo';
     document.getElementById('admin-profile-verified').textContent = u.verified ? 'Sí' : 'No';
-    document.getElementById('admin-profile-created').textContent = u.createdAt ? new Date(u.createdAt).toLocaleString('es-ES') : '—';
-    document.getElementById('admin-profile-lastlogin').textContent = u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('es-ES') : 'Nunca';
-    document.getElementById('admin-profile-rabbits').textContent = String(getUserRabbitCount(u.email));
+    document.getElementById('admin-profile-created').textContent = u.created_at ? new Date(u.created_at).toLocaleString('es-ES') : '—';
+    document.getElementById('admin-profile-lastlogin').textContent = u.last_login_at ? new Date(u.last_login_at).toLocaleString('es-ES') : 'Nunca';
+    document.getElementById('admin-profile-rabbits').textContent = String(await getUserRabbitCount(u.id));
 
     document.getElementById('admin-profile-modal').classList.add('active');
 }
@@ -599,6 +594,10 @@ if (adminUsersSearchInput) {
 }
 
 // ================= SIMULACIÓN REDES SOCIALES =================
+// Nota: esto sigue siendo una simulación visual, tal como estaba antes.
+// Para conectar Google/Facebook de verdad hay que activar esos proveedores
+// OAuth en Supabase (Authentication > Providers) y reemplazar este bloque
+// por supabaseClient.auth.signInWithOAuth({ provider: 'google' }).
 const socialModal = document.getElementById('social-modal');
 const modalLoading = document.getElementById('modal-loading');
 const modalLoadingText = document.getElementById('modal-loading-text');
@@ -643,16 +642,9 @@ closeModalBtn.addEventListener('click', () => socialModal.classList.remove('acti
 
 document.querySelectorAll('.account-row').forEach(row => {
     row.addEventListener('click', () => {
-        const name = row.getAttribute('data-name');
-        const email = row.getAttribute('data-email');
         modalAccountSelect.style.display = 'none';
-        modalLoading.style.display = 'flex';
-        modalLoadingText.textContent = 'Iniciando sesión...';
-
-        setTimeout(() => {
-            socialModal.classList.remove('active');
-            loginUser({ name, email, social: currentSocialProvider });
-        }, 1000);
+        socialModal.classList.remove('active');
+        alert('El inicio de sesión con Google/Facebook todavía no está activado. Por ahora usá el registro con correo y contraseña.');
     });
 });
 
@@ -689,9 +681,12 @@ function getRandomStockPhoto() {
 let rabbitCodeCounter = 0;
 
 function persistRabbitCodeCounter() {
-    const session = JSON.parse(localStorage.getItem('conejos_session'));
-    if (!session) return;
-    localStorage.setItem(`rabbit_code_counter_${session.email}`, String(rabbitCodeCounter));
+    if (!currentProfile) return;
+    supabaseClient
+        .from('app_data')
+        .update({ rabbit_code_counter: rabbitCodeCounter })
+        .eq('user_id', currentProfile.id)
+        .then(() => {});
 }
 
 function getNextRabbitCode() {
@@ -1597,11 +1592,23 @@ function renderRabbitHistory(rabbit) {
         </div>
     `).join('') + `</div>`;
 }
+// Guarda el arreglo `state[type]` en la fila de "app_data" del usuario actual
+// en Supabase (una columna jsonb por tipo de dato) y refresca la pantalla.
+// El guardado en la nube corre en segundo plano: la interfaz no espera la
+// respuesta del servidor para sentirse ágil, pero si falla se avisa al usuario.
 function saveStateAndRender(type) {
-    const session = JSON.parse(localStorage.getItem('conejos_session'));
-    if (!session) return;
-
-    localStorage.setItem(`${type}_${session.email}`, JSON.stringify(state[type]));
+    if (currentProfile) {
+        supabaseClient
+            .from('app_data')
+            .update({ [type]: state[type], updated_at: new Date().toISOString() })
+            .eq('user_id', currentProfile.id)
+            .then(({ error }) => {
+                if (error) {
+                    console.error('Error al guardar en Supabase:', error);
+                    alert('No se pudo guardar el cambio en la nube. Revisá tu conexión e intentá de nuevo.');
+                }
+            });
+    }
 
     if (type === 'rabbits') { renderRabbits(); renderWeaningMothers(); renderBirthMothers(); }
     if (type === 'breeding') renderBreeding();
@@ -1614,30 +1621,38 @@ function saveStateAndRender(type) {
     updateDashboardMetrics();
 }
 
-function loadUserAppData() {
-    const session = JSON.parse(localStorage.getItem('conejos_session'));
-    if (!session) return;
+// Carga todos los datos del usuario (conejos, montas, cuarentena, vacunas,
+// jaulas, partos) desde la fila de "app_data" en Supabase. Si el usuario es
+// nuevo y todavía no tiene fila, se crea una vacía.
+async function loadUserAppData() {
+    if (!currentProfile) return;
 
-    // Migración única: elimina cualquier dato de ejemplo que haya quedado guardado
-    // en cuentas creadas antes de esta actualización (conejos, montas, cuarentena y
-    // vacunas de muestra). Se ejecuta una sola vez por cuenta.
-    const migrationKey = `conejos_empty_account_migration_${session.email}`;
-    if (!localStorage.getItem(migrationKey)) {
-        localStorage.removeItem(`rabbits_${session.email}`);
-        localStorage.removeItem(`breeding_${session.email}`);
-        localStorage.removeItem(`quarantine_${session.email}`);
-        localStorage.removeItem(`vaccines_${session.email}`);
-        localStorage.removeItem(`cages_${session.email}`);
-        localStorage.removeItem(`births_${session.email}`);
-        localStorage.setItem(migrationKey, '1');
+    let { data: row, error } = await supabaseClient
+        .from('app_data')
+        .select('*')
+        .eq('user_id', currentProfile.id)
+        .maybeSingle();
+
+    if (!row && !error) {
+        const { data: inserted } = await supabaseClient
+            .from('app_data')
+            .insert({ user_id: currentProfile.id })
+            .select()
+            .maybeSingle();
+        row = inserted;
+    }
+
+    if (!row) {
+        alert('No pudimos cargar tus datos desde la nube. Revisá tu conexión e intentá de nuevo.');
+        row = {};
     }
 
     // Cada cuenta nueva arranca completamente vacía: sin ejemplares, montas,
     // cuarentenas ni vacunas de ejemplo precargadas.
-    state.rabbits = JSON.parse(localStorage.getItem(`rabbits_${session.email}`)) || [];
+    state.rabbits = row.rabbits || [];
 
-    // Migración: asigna foto por defecto y código automático a ejemplares guardados
-    // previamente que aún no los tengan (compatibilidad con datos ya existentes)
+    // Compatibilidad: asigna foto por defecto y código automático a ejemplares
+    // guardados previamente que aún no los tengan.
     let maxExistingCode = 0;
     state.rabbits.forEach(r => {
         if (!r.photo) r.photo = getRandomStockPhoto();
@@ -1651,14 +1666,14 @@ function loadUserAppData() {
         }
     });
 
-    const storedCounter = Number(localStorage.getItem(`rabbit_code_counter_${session.email}`)) || 0;
+    const storedCounter = Number(row.rabbit_code_counter) || 0;
     rabbitCodeCounter = Math.max(storedCounter, maxExistingCode);
 
-    state.breeding = JSON.parse(localStorage.getItem(`breeding_${session.email}`)) || [];
-    state.quarantine = JSON.parse(localStorage.getItem(`quarantine_${session.email}`)) || [];
-    state.vaccines = JSON.parse(localStorage.getItem(`vaccines_${session.email}`)) || [];
-    state.cages = JSON.parse(localStorage.getItem(`cages_${session.email}`)) || [];
-    state.births = JSON.parse(localStorage.getItem(`births_${session.email}`)) || [];
+    state.breeding = row.breeding || [];
+    state.quarantine = row.quarantine || [];
+    state.vaccines = row.vaccines || [];
+    state.cages = row.cages || [];
+    state.births = row.births || [];
 
     renderRabbits();
     renderBreeding();
@@ -2673,53 +2688,17 @@ window.addEventListener('load', () => {
         } catch(e) {}
     }, 60000);
 
-    let activeSession = null;
-    try {
-        const sessionStr = localStorage.getItem('conejos_session');
-        if (sessionStr && sessionStr !== "undefined") {
-            activeSession = JSON.parse(sessionStr);
-        }
-    } catch (e) {
-        console.error("Error al cargar la sesión activa:", e);
-        localStorage.removeItem('conejos_session');
-    }
-
-    if (activeSession && activeSession.name) {
-        // Si la cuenta fue bloqueada o eliminada desde que se guardó la sesión, se cierra la sesión
-        const db = loadUsersDB();
-        const dbUser = db.find(u => u.email === activeSession.email);
-        if (!dbUser) {
-            localStorage.removeItem('conejos_session');
+    // Restaura la sesión de Supabase si existe (persistida por supabase-js
+    // en el propio navegador). handleSignedIn se encarga de validar que la
+    // cuenta no esté bloqueada y de cargar el perfil + los datos.
+    supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
+        if (session) {
+            const ok = await handleSignedIn();
+            if (!ok) showScreen('welcome-screen');
+        } else {
             showScreen('welcome-screen');
-            return;
         }
-        if (dbUser.status === 'blocked') {
-            localStorage.removeItem('conejos_session');
-            showScreen('welcome-screen');
-            alert('Tu cuenta fue bloqueada por un administrador.');
-            return;
-        }
-        loginUser(dbUser);
-    } else {
-        showScreen('welcome-screen');
-    }
+    });
 });
-
-
-// ================= PRUEBA SUPABASE =================
-
-async function probarSupabase(){
-
-    const { data, error } = await supabaseClient
-        .from("conejos")
-        .select("*");
-
-    if(error){
-        console.log("Error Supabase:", error);
-    } else {
-        console.log("Supabase conectado:", data);
-    }
-
-}
 
 probarSupabase();
