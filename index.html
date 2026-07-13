@@ -1459,54 +1459,5 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="qrcode.min.js"></script>
 <script src="app.js"></script>
-
-    <!-- ================= PANTALLA COMPLETA (FULLSCREEN API) =================
-         Solicita pantalla completa real del navegador/WebView para ocultar la
-         barra de navegación del sistema (atrás/inicio/recientes) y la barra
-         de estado. Es 100% web estándar (Fullscreen API), no requiere código
-         nativo de Android. El primer intento es automático; como la mayoría
-         de los navegadores exige un gesto del usuario para conceder fullscreen,
-         se refuerza en el primer toque/clic y cada vez que la app vuelve a
-         primer plano (algunos WebView salen de fullscreen al minimizar). -->
-    <script>
-        (function () {
-            function requestFullscreen() {
-                var el = document.documentElement;
-                var request = el.requestFullscreen
-                    || el.webkitRequestFullscreen
-                    || el.mozRequestFullScreen
-                    || el.msRequestFullscreen;
-                if (request) {
-                    try {
-                        var result = request.call(el);
-                        if (result && result.catch) { result.catch(function () {}); }
-                    } catch (e) { /* silencioso: algunos WebView bloquean el intento automático */ }
-                }
-            }
-
-            function isFullscreen() {
-                return !!(document.fullscreenElement || document.webkitFullscreenElement
-                    || document.mozFullScreenElement || document.msFullscreenElement);
-            }
-
-            function ensureFullscreen() {
-                if (!isFullscreen()) requestFullscreen();
-            }
-
-            document.addEventListener('DOMContentLoaded', requestFullscreen);
-            window.addEventListener('load', requestFullscreen);
-
-            // Refuerzo con la primera interacción del usuario (requerido por
-            // la mayoría de navegadores/WebView para conceder fullscreen).
-            ['click', 'touchstart', 'pointerdown'].forEach(function (evt) {
-                document.addEventListener(evt, ensureFullscreen, { passive: true });
-            });
-
-            // Vuelve a solicitarlo si la app regresa a primer plano.
-            document.addEventListener('visibilitychange', function () {
-                if (document.visibilityState === 'visible') ensureFullscreen();
-            });
-        })();
-    </script>
 </body>
 </html>
