@@ -408,11 +408,13 @@ body::-webkit-scrollbar,
 /* --- CONTENIDO PRINCIPAL --- */
 .main-content {
     flex: 1;
+    min-width: 0;
     margin-left: 260px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     background-color: #f4f7f5;
+    overflow-x: hidden;
     transition: var(--transition);
 }
 
@@ -530,11 +532,14 @@ body::-webkit-scrollbar,
 .sections-wrapper {
     padding: 2rem;
     flex: 1;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .dashboard-section {
     display: none;
     animation: fadeScale 0.3s ease forwards;
+    max-width: 100%;
 }
 
 .dashboard-section.active {
@@ -1311,7 +1316,7 @@ body::-webkit-scrollbar,
 
 .rabbits-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(155px, 100%), 1fr));
     gap: 0.9rem;
 }
 
@@ -1459,6 +1464,8 @@ body::-webkit-scrollbar,
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .glass h2 {
@@ -1475,9 +1482,16 @@ body::-webkit-scrollbar,
 
 .rabbit-input-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto;
+    grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
     gap: 0.8rem;
     align-items: center;
+}
+
+/* El botón (u otro elemento suelto al final del formulario) ocupa toda la
+   fila en vez de agregar una columna extra que puede forzar el desborde
+   horizontal de la tarjeta en pantallas intermedias (tablets/laptops chicas). */
+.rabbit-input-grid > button {
+    grid-column: 1 / -1;
 }
 
 .rabbit-input-grid input,
@@ -1567,7 +1581,7 @@ body::-webkit-scrollbar,
    pegadas a la izquierda con un espacio vacío raro a la derecha. */
 .mini-rabbit-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 200px));
+    grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 200px));
     justify-content: center;
     gap: 0.9rem;
 }
@@ -1891,6 +1905,36 @@ body::-webkit-scrollbar,
 
 /* ================= DISEÑO RESPONSIVO (MÓVIL) ================= */
 @media (max-width: 820px) {
+    /* Layout de columna a pantalla completa: el header y el contenido
+       scrollean adentro de su propio espacio, y el menú inferior queda
+       como un hermano flex fuera del área con scroll, así que nunca se
+       mueve ni se tapa, sin depender de position:fixed (que en algunos
+       WebView de Android se "despega" al hacer scroll). */
+    html, body {
+        height: 100%;
+    }
+
+    .app-dashboard-layout {
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .main-content {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .sections-wrapper {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .sidebar {
         transform: translateX(-100%);
     }
@@ -1901,8 +1945,6 @@ body::-webkit-scrollbar,
     
     .main-content {
         margin-left: 0;
-        /* Evitar que el bottom-nav (ahora más alto por la zona segura) tape el contenido */
-        padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
     
     .hamburger-btn {
@@ -2046,13 +2088,15 @@ body::-webkit-scrollbar,
         display: none;
     }
     
-    /* --- BARRA DE NAVEGACIÓN INFERIOR (MÓVIL) --- */
+    /* --- BARRA DE NAVEGACIÓN INFERIOR (MÓVIL) ---
+       Ya no usa position:fixed: al ser un hermano flex de .main-content
+       dentro de .app-dashboard-layout (que ahora mide 100dvh con overflow
+       hidden, y solo .sections-wrapper scrollea por dentro), esta barra
+       queda "anclada" abajo por estructura y nunca se mueve ni se tapa. */
     .bottom-nav {
         display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        flex-shrink: 0;
+        position: relative;
         /* La altura visible sigue siendo 68px; se suma el alto de la barra
            de gestos/navegación del sistema como padding, para que los
            botones nunca queden debajo de ella. */
