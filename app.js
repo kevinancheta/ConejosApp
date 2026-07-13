@@ -1,3 +1,12 @@
+// ================= CONEXIÓN SUPABASE =================
+const SUPABASE_URL = "https://wtfwhuitnfrczfgeykyf.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable_XEk6p1w97t6o2xQvIgNZAA_ZFd25l1f";
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 // ================= SISTEMA DE NAVEGACIÓN PRINCIPAL (SPA PANTALLAS) =================
 const screens = document.querySelectorAll('.screen');
 
@@ -2695,3 +2704,22 @@ window.addEventListener('load', () => {
         showScreen('welcome-screen');
     }
 });
+
+
+// ================= PRUEBA SUPABASE =================
+
+async function probarSupabase(){
+
+    const { data, error } = await supabaseClient
+        .from("conejos")
+        .select("*");
+
+    if(error){
+        console.log("Error Supabase:", error);
+    } else {
+        console.log("Supabase conectado:", data);
+    }
+
+}
+
+probarSupabase();
