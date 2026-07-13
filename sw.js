@@ -1,4 +1,11 @@
-const CACHE_NAME = 'conejos-app-v3';
+// IMPORTANTE: cada vez que cambian los archivos cacheados (style.css,
+// app.js, etc.) hay que subir este número. El Service Worker solo vuelve a
+// descargar y cachear los archivos cuando el navegador detecta que ESTE
+// ARCHIVO (sw.js) cambió de contenido; si sw.js queda igual, el navegador
+// sigue usando para siempre la caché vieja con el CSS/JS viejo, aunque el
+// archivo en el servidor ya esté arreglado (por eso el fix de scroll no se
+// veía: quedaba serviéndose el style.css cacheado de antes del arreglo).
+const CACHE_NAME = 'conejos-app-v4';
 const ASSETS = [
     './',
     './index.html',
@@ -35,15 +42,35 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// Responder con los recursos guardados en caché o buscar en la red
+// Estrategia "red primero, caché como respaldo" para los archivos propios
+// de la app (html/css/js): así, si volvés a tocar el código más adelante,
+// el cambio se ve al toque la próxima vez que haya conexión, en vez de
+// quedar atrapado en la caché hasta el próximo bump de CACHE_NAME. Si no
+// hay conexión, se sirve la última copia guardada (para que la app siga
+// funcionando offline).
 self.addEventListener('fetch', (e) => {
+    const url = new URL(e.request.url);
+    const isOwnAsset = url.origin === self.location.origin;
+
+    if (isOwnAsset) {
+        e.respondWith(
+            fetch(e.request)
+                .then((networkResponse) => {
+                    const copy = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(e.request, copy));
+                    return networkResponse;
+                })
+                .catch(() => caches.match(e.request).then((cached) => {
+                    return cached || (e.request.mode === 'navigate' ? caches.match('./index.html') : undefined);
+                }))
+        );
+        return;
+    }
+
+    // Recursos externos (p. ej. la fuente de Google Fonts): caché primero.
     e.respondWith(
         caches.match(e.request).then((cachedResponse) => {
-            return cachedResponse || fetch(e.request).catch(() => {
-                if (e.request.mode === 'navigate') {
-                    return caches.match('./index.html');
-                }
-            });
+            return cachedResponse || fetch(e.request).catch(() => undefined);
         })
     );
 });
