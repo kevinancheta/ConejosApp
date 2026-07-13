@@ -1234,89 +1234,110 @@
 
 
     <!-- ================= MODAL FICHA DE EJEMPLAR (DETALLE Y ÁRBOL GENEALÓGICO) ================= -->
-    <div id="rabbit-detail-modal" class="modal-overlay">
-        <div class="social-modal-card modal-wide rabbit-detail-card">
+    <div id="rabbit-detail-screen" class="screen">
+        <div class="rabbit-page">
 
-            <!-- Cabecera fija: nombre, código y estado -->
-            <div class="detail-modal-header">
-                <h3 id="detail-rabbit-name">Nombre del conejo</h3>
-                <span id="detail-rabbit-status" class="status-tag status-saludable">Estado</span>
+            <!-- Cabecera: foto grande con botones flotantes -->
+            <div class="rabbit-page-header">
+                <img id="detail-rabbit-photo" class="rabbit-page-photo" src="" alt="Foto del conejo">
+                <div class="rabbit-page-header-fade"></div>
+                <button type="button" class="rabbit-page-icon-btn rabbit-page-back" id="rabbit-page-back-btn" aria-label="Volver">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <button type="button" class="rabbit-page-icon-btn rabbit-page-menu" id="rabbit-page-menu-btn" aria-label="Más opciones">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                </button>
+                <div class="profile-menu-popover" id="rabbit-page-menu-popover">
+                    <button type="button" id="edit-rabbit-from-detail-btn">✏️ Editar ejemplar</button>
+                    <button type="button" id="delete-rabbit-from-detail-btn">🗑️ Eliminar ejemplar</button>
+                </div>
             </div>
 
-            <!-- Pestañas de navegación (fijas, scroll horizontal en móvil) -->
-            <div class="detail-tabs" id="detail-tabs" role="tablist">
-                <button type="button" class="detail-tab active" data-tab="info" role="tab">Información</button>
-                <button type="button" class="detail-tab" data-tab="salud" role="tab">Salud</button>
-                <button type="button" class="detail-tab" data-tab="reproduccion" role="tab">Reproducción</button>
-                <button type="button" class="detail-tab" data-tab="vacunas" role="tab">Vacunas</button>
-                <button type="button" class="detail-tab" data-tab="historial" role="tab">Historial</button>
-                <button type="button" class="detail-tab" data-tab="observaciones" role="tab">Observaciones</button>
+            <!-- Tarjeta superpuesta: nombre, estado e info principal -->
+            <div class="rabbit-page-card rabbit-page-titlecard">
+                <div class="rabbit-page-title-row">
+                    <h2 id="detail-rabbit-name">Nombre del conejo</h2>
+                    <span id="detail-rabbit-status" class="status-tag status-saludable">Estado</span>
+                </div>
+                <p class="modal-subtitle" id="detail-rabbit-meta">Raza • Categoría</p>
+
+                <div class="detail-stats-row" id="detail-stats-row">
+                    <!-- Se rellena dinámicamente con edad, peso y peso esperado -->
+                </div>
+                <div class="detail-info-list" id="detail-info-extra">
+                    <!-- Se rellena dinámicamente: jaula, fecha de nacimiento, código -->
+                </div>
             </div>
 
-            <!-- Contenido de cada pestaña: única zona con scroll interno -->
-            <div class="detail-tab-content" id="detail-tab-content">
-
-                <!-- ===== INFORMACIÓN ===== -->
-                <div class="detail-tab-panel active" data-panel="info">
-                    <div class="detail-photo-container">
-                        <img id="detail-rabbit-photo" class="detail-photo" src="" alt="Foto del conejo" style="display:none;">
-                    </div>
-                    <p class="modal-subtitle" id="detail-rabbit-meta">Raza • Categoría</p>
-                    <div class="detail-stats-row" id="detail-stats-row">
-                        <!-- Se rellena dinámicamente con edad, peso y peso esperado -->
-                    </div>
-                    <div class="detail-info-list" id="detail-info-extra">
-                        <!-- Se rellena dinámicamente: jaula, fecha de nacimiento, código -->
-                    </div>
+            <!-- Pedigrí (desplegable) -->
+            <div class="rabbit-page-card rabbit-page-row" id="rabbit-page-pedigree-toggle">
+                <span>🌳 Pedigrí</span>
+                <svg class="rabbit-page-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="rabbit-page-card rabbit-page-collapsible" id="rabbit-page-pedigree-content" style="display:none;">
+                <div class="pedigree-tree" id="detail-pedigree-tree">
+                    <!-- Se rellena dinámicamente con JS -->
                 </div>
-
-                <!-- ===== SALUD ===== -->
-                <div class="detail-tab-panel" data-panel="salud">
-                    <div id="detail-health-section">
-                        <!-- Se rellena dinámicamente: estado actual + historial de cuarentena/tratamientos -->
-                    </div>
-                </div>
-
-                <!-- ===== REPRODUCCIÓN ===== -->
-                <div class="detail-tab-panel" data-panel="reproduccion">
-                    <div class="pedigree-tree" id="detail-pedigree-tree">
-                        <!-- Se rellena dinámicamente con JS -->
-                    </div>
-                    <div id="detail-breeding-section">
-                        <!-- Se rellena dinámicamente: montas y camadas relacionadas -->
-                    </div>
-                </div>
-
-                <!-- ===== VACUNAS ===== -->
-                <div class="detail-tab-panel" data-panel="vacunas">
-                    <div class="detail-vaccine-section" id="detail-vaccine-section">
-                        <!-- Se rellena dinámicamente: dosis dadas y próximas dosis -->
-                    </div>
-                </div>
-
-                <!-- ===== HISTORIAL ===== -->
-                <div class="detail-tab-panel" data-panel="historial">
-                    <div id="detail-history-section">
-                        <!-- Se rellena dinámicamente: línea de tiempo con todos los eventos del ejemplar -->
-                    </div>
-                </div>
-
-                <!-- ===== OBSERVACIONES ===== -->
-                <div class="detail-tab-panel" data-panel="observaciones">
-                    <label for="detail-observations-input" class="pedigree-gen-label">Notas del criador</label>
-                    <textarea id="detail-observations-input" class="observations-textarea" rows="8" placeholder="Escribe aquí cualquier observación sobre este ejemplar: comportamiento, alimentación, incidencias, etc."></textarea>
-                    <button type="button" class="btn btn-primary btn-block" id="save-observations-btn" style="margin-top:0.8rem;">Guardar observaciones</button>
-                    <p class="empty-dose-text" id="observations-saved-msg" style="display:none; text-align:center; margin-top:0.6rem;">Observaciones guardadas ✓</p>
-                </div>
-
             </div>
 
-            <!-- Pie fijo -->
-            <div class="detail-modal-footer">
-                <button type="button" class="btn btn-secondary btn-block" id="close-rabbit-detail-modal">Cerrar</button>
-                <button type="button" class="btn btn-primary btn-block" id="edit-rabbit-from-detail-btn">Editar</button>
+            <!-- Cría: ejemplares hijos de este conejo -->
+            <div class="rabbit-page-card">
+                <div class="rabbit-page-section-title">CRÍA</div>
+                <div id="detail-offspring-section">
+                    <!-- Se rellena dinámicamente con las crías registradas -->
+                </div>
             </div>
+
+            <!-- Salud (desplegable) -->
+            <div class="rabbit-page-card rabbit-page-row" data-toggle-target="rabbit-page-salud-content">
+                <span>🩺 Salud</span>
+                <svg class="rabbit-page-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="rabbit-page-card rabbit-page-collapsible" id="rabbit-page-salud-content" style="display:none;">
+                <div id="detail-health-section"></div>
+            </div>
+
+            <!-- Reproducción / montas (desplegable) -->
+            <div class="rabbit-page-card rabbit-page-row" data-toggle-target="rabbit-page-breeding-content">
+                <span>❤️ Reproducción</span>
+                <svg class="rabbit-page-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="rabbit-page-card rabbit-page-collapsible" id="rabbit-page-breeding-content" style="display:none;">
+                <div id="detail-breeding-section"></div>
+            </div>
+
+            <!-- Vacunas (desplegable) -->
+            <div class="rabbit-page-card rabbit-page-row" data-toggle-target="rabbit-page-vaccine-content">
+                <span>💉 Vacunas</span>
+                <svg class="rabbit-page-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="rabbit-page-card rabbit-page-collapsible" id="rabbit-page-vaccine-content" style="display:none;">
+                <div class="detail-vaccine-section" id="detail-vaccine-section"></div>
+            </div>
+
+            <!-- Historial (desplegable) -->
+            <div class="rabbit-page-card rabbit-page-row" data-toggle-target="rabbit-page-history-content">
+                <span>🕒 Historial</span>
+                <svg class="rabbit-page-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="rabbit-page-card rabbit-page-collapsible" id="rabbit-page-history-content" style="display:none;">
+                <div id="detail-history-section"></div>
+            </div>
+
+            <!-- Observaciones -->
+            <div class="rabbit-page-card">
+                <div class="rabbit-page-section-title">OBSERVACIONES</div>
+                <textarea id="detail-observations-input" class="observations-textarea" rows="5" placeholder="Escribe aquí cualquier observación sobre este ejemplar: comportamiento, alimentación, incidencias, etc."></textarea>
+                <button type="button" class="btn btn-primary btn-block" id="save-observations-btn" style="margin-top:0.8rem;">Guardar observaciones</button>
+                <p class="empty-dose-text" id="observations-saved-msg" style="display:none; text-align:center; margin-top:0.6rem;">Observaciones guardadas ✓</p>
+            </div>
+
+            <p class="rabbit-page-footer-text">Edita y gestiona desde el menú <span id="rabbit-page-footer-menu-btn">⋮</span></p>
         </div>
+
+        <button type="button" class="rabbit-page-fab" id="rabbit-page-fab-btn" aria-label="Editar ejemplar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
     </div>
 
 

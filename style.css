@@ -2407,3 +2407,209 @@ body::-webkit-scrollbar,
         display: none !important;
     }
 }
+
+/* ================= FICHA DE CONEJO — PÁGINA COMPLETA APARTE ================= */
+/* Antes esta ficha era un modal chico; ahora es una pantalla propia (.screen)
+   con foto grande arriba y secciones apiladas en tarjetas, como una app nativa
+   de fichas de animales. */
+
+#rabbit-detail-screen {
+    background-color: #f4f7f5;
+    display: block;
+    min-height: 100vh;
+}
+
+#rabbit-detail-screen.active {
+    display: block;
+}
+
+.rabbit-page {
+    max-width: 560px;
+    margin: 0 auto;
+    padding-bottom: 6rem;
+}
+
+/* --- Cabecera con foto --- */
+.rabbit-page-header {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    background-color: #d9e3dc;
+    overflow: hidden;
+}
+
+.rabbit-page-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rabbit-page-header-fade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+    pointer-events: none;
+}
+
+.rabbit-page-icon-btn {
+    position: absolute;
+    top: 1rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.85);
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(4px);
+}
+
+.rabbit-page-back { left: 1rem; }
+.rabbit-page-menu { right: 1rem; }
+
+#rabbit-page-menu-popover {
+    position: absolute;
+    top: 4rem;
+    right: 1rem;
+    left: auto;
+    bottom: auto;
+}
+
+/* --- Tarjetas apiladas --- */
+.rabbit-page-card {
+    background-color: #ffffff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 1.3rem 1.4rem;
+    margin: 0 1rem 1rem 1rem;
+    position: relative;
+}
+
+.rabbit-page-titlecard {
+    margin-top: -28px;
+}
+
+.rabbit-page-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
+.rabbit-page-title-row h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #1a202c;
+}
+
+.rabbit-page-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.9rem;
+}
+
+/* --- Filas desplegables (Pedigrí, Salud, Reproducción, Vacunas, Historial) --- */
+.rabbit-page-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+}
+
+.rabbit-page-chevron {
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.rabbit-page-row.open .rabbit-page-chevron {
+    transform: rotate(90deg);
+}
+
+.rabbit-page-collapsible {
+    margin-top: -0.6rem;
+    animation: fadeScale 0.2s ease forwards;
+}
+
+/* --- Cría: lista de crías registradas --- */
+.cria-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.cria-item:last-child {
+    border-bottom: none;
+}
+
+.cria-item img {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+    background-color: var(--primary-light);
+}
+
+.cria-item .cria-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.cria-item .cria-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.cria-item .cria-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* --- Pie y botón flotante --- */
+.rabbit-page-footer-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0.5rem 1rem 0 1rem;
+}
+
+.rabbit-page-fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 1.5rem;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 20px -5px rgba(45, 138, 78, 0.5);
+    z-index: 50;
+}
+
+@media (min-width: 600px) {
+    .rabbit-page-fab {
+        right: calc(50% - 280px + 1.5rem);
+    }
+}

@@ -1284,41 +1284,85 @@ function getExpectedWeight(breed, ageDays) {
 }
 
 // ================= FICHA DE EJEMPLAR (DETALLE + ÁRBOL GENEALÓGICO) =================
-const rabbitDetailModal = document.getElementById('rabbit-detail-modal');
-const closeRabbitDetailBtn = document.getElementById('close-rabbit-detail-modal');
 const editRabbitFromDetailBtn = document.getElementById('edit-rabbit-from-detail-btn');
-const detailTabsBar = document.getElementById('detail-tabs');
-const detailTabContent = document.getElementById('detail-tab-content');
+const deleteRabbitFromDetailBtn = document.getElementById('delete-rabbit-from-detail-btn');
+const rabbitPageMenuBtn = document.getElementById('rabbit-page-menu-btn');
+const rabbitPageMenuPopover = document.getElementById('rabbit-page-menu-popover');
+const rabbitPageFooterMenuBtn = document.getElementById('rabbit-page-footer-menu-btn');
+const rabbitPageFabBtn = document.getElementById('rabbit-page-fab-btn');
+const rabbitPageBackBtn = document.getElementById('rabbit-page-back-btn');
 const detailObservationsInput = document.getElementById('detail-observations-input');
 const saveObservationsBtn = document.getElementById('save-observations-btn');
 const observationsSavedMsg = document.getElementById('observations-saved-msg');
 let currentDetailRabbitId = null;
 
-closeRabbitDetailBtn.addEventListener('click', () => {
-    rabbitDetailModal.classList.remove('active');
+// Volver al dashboard desde la ficha del conejo
+rabbitPageBackBtn.addEventListener('click', () => {
+    showScreen('app-dashboard');
 });
 
-// Botón "Editar" dentro de la ficha: cierra el detalle y abre el formulario de edición
+// Menú "⋮" con Editar / Eliminar
+function toggleRabbitPageMenu(forceClose) {
+    if (forceClose) {
+        rabbitPageMenuPopover.classList.remove('active');
+        return;
+    }
+    rabbitPageMenuPopover.classList.toggle('active');
+}
+rabbitPageMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleRabbitPageMenu();
+});
+rabbitPageFooterMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleRabbitPageMenu();
+});
+document.addEventListener('click', () => toggleRabbitPageMenu(true));
+
+// Botón "Editar" dentro de la ficha: cierra el menú y abre el formulario de edición
 editRabbitFromDetailBtn.addEventListener('click', () => {
     if (!currentDetailRabbitId) return;
-    rabbitDetailModal.classList.remove('active');
+    toggleRabbitPageMenu(true);
     openRabbitModal(currentDetailRabbitId);
 });
 
-// Cambia de pestaña dentro de la ficha del conejo (Información, Salud, Reproducción, etc.)
-function switchDetailTab(tabName) {
-    detailTabsBar.querySelectorAll('.detail-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.getAttribute('data-tab') === tabName);
-    });
-    detailTabContent.querySelectorAll('.detail-tab-panel').forEach(panel => {
-        panel.classList.toggle('active', panel.getAttribute('data-panel') === tabName);
-    });
-    // Al cambiar de pestaña, arrancar arriba del todo dentro de esa pestaña
-    detailTabContent.scrollTop = 0;
-}
+// Botón "+" flotante: acceso rápido para editar el ejemplar
+rabbitPageFabBtn.addEventListener('click', () => {
+    if (!currentDetailRabbitId) return;
+    openRabbitModal(currentDetailRabbitId);
+});
 
-detailTabsBar.querySelectorAll('.detail-tab').forEach(tab => {
-    tab.addEventListener('click', () => switchDetailTab(tab.getAttribute('data-tab')));
+// Botón "Eliminar" dentro de la ficha
+deleteRabbitFromDetailBtn.addEventListener('click', () => {
+    if (!currentDetailRabbitId) return;
+    const rabbit = getRabbitById(currentDetailRabbitId);
+    if (!rabbit) return;
+    toggleRabbitPageMenu(true);
+    if (confirm(`¿Estás seguro de eliminar a ${rabbit.name}?`)) {
+        state.rabbits = state.rabbits.filter(r => r.id !== rabbit.id);
+        saveStateAndRender('rabbits');
+        showScreen('app-dashboard');
+    }
+});
+
+// Filas desplegables (Pedigrí, Salud, Reproducción, Vacunas, Historial)
+document.querySelectorAll('#rabbit-detail-screen .rabbit-page-row[data-toggle-target]').forEach(row => {
+    row.addEventListener('click', () => {
+        const target = document.getElementById(row.getAttribute('data-toggle-target'));
+        if (!target) return;
+        const isOpen = target.style.display !== 'none';
+        target.style.display = isOpen ? 'none' : 'block';
+        row.classList.toggle('open', !isOpen);
+    });
+});
+
+// Fila desplegable de Pedigrí (con id fijo, sin data-toggle-target genérico)
+const rabbitPagePedigreeToggle = document.getElementById('rabbit-page-pedigree-toggle');
+rabbitPagePedigreeToggle.addEventListener('click', () => {
+    const target = document.getElementById('rabbit-page-pedigree-content');
+    const isOpen = target.style.display !== 'none';
+    target.style.display = isOpen ? 'none' : 'block';
+    rabbitPagePedigreeToggle.classList.toggle('open', !isOpen);
 });
 
 // Guarda las observaciones/notas del ejemplar que se está viendo
@@ -1354,15 +1398,9 @@ function openRabbitDetail(rabbitId) {
     statusEl.className = `status-tag ${statusClass}`;
     document.getElementById('detail-rabbit-meta').textContent = `${rabbit.breed} • ${rabbit.gender}`;
 
-    // Foto del ejemplar
+    // Foto del ejemplar (cabecera de la página). Si no tiene, se usa la imagen por defecto.
     const photoEl = document.getElementById('detail-rabbit-photo');
-    if (rabbit.photo) {
-        photoEl.src = rabbit.photo;
-        photoEl.style.display = 'block';
-    } else {
-        photoEl.src = '';
-        photoEl.style.display = 'none';
-    }
+    photoEl.src = rabbit.photo || 'assets/default-rabbit.jpg';
 
     // Edad, peso actual y peso esperado para su edad y raza
     const ageDays = getAgeInDays(rabbit.birthDate);
@@ -1461,15 +1499,61 @@ function openRabbitDetail(rabbitId) {
     renderRabbitBreeding(rabbit);
     renderRabbitHealth(rabbit);
     renderRabbitHistory(rabbit);
+    renderRabbitOffspring(rabbit);
 
     // Observaciones guardadas para este ejemplar
     detailObservationsInput.value = rabbit.observations || '';
     observationsSavedMsg.style.display = 'none';
 
-    // La ficha siempre arranca en la pestaña "Información"
-    switchDetailTab('info');
+    // Cada vez que se abre una ficha, las secciones desplegables arrancan cerradas
+    document.querySelectorAll('#rabbit-detail-screen .rabbit-page-collapsible').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('#rabbit-detail-screen .rabbit-page-row').forEach(row => {
+        row.classList.remove('open');
+    });
+    toggleRabbitPageMenu(true);
 
-    rabbitDetailModal.classList.add('active');
+    showScreen('rabbit-detail-screen');
+    const pageEl = document.querySelector('#rabbit-detail-screen .rabbit-page');
+    if (pageEl) pageEl.scrollTop = 0;
+}
+
+// ===== Sección "Cría": ejemplares registrados como hijos de este conejo =====
+function renderRabbitOffspring(rabbit) {
+    const section = document.getElementById('detail-offspring-section');
+    if (!section) return;
+
+    const kids = state.rabbits
+        .filter(r => r.motherId === rabbit.id || r.fatherId === rabbit.id)
+        .sort((a, b) => new Date(b.birthDate || 0) - new Date(a.birthDate || 0));
+
+    if (kids.length === 0) {
+        section.innerHTML = `<p class="empty-dose-text">Este ejemplar todavía no tiene crías registradas.</p>`;
+        return;
+    }
+
+    section.innerHTML = kids.map(kid => {
+        const ageDays = getAgeInDays(kid.birthDate);
+        const ageText = formatAgeText(ageDays);
+        const photoUrl = kid.photo || 'assets/default-rabbit.jpg';
+        return `
+            <div class="cria-item" data-rabbit-id="${kid.id}">
+                <img src="${photoUrl}" alt="${escapeHTML(kid.name)}">
+                <div class="cria-info">
+                    <div class="cria-name">${escapeHTML(kid.name)} <span class="rabbit-id-tag">${formatRabbitCode(kid.code)}</span></div>
+                    <div class="cria-sub">${escapeHTML(ageText)}${kid.birthDate ? ' • ' + kid.birthDate : ''}</div>
+                </div>
+                <span class="status-tag ${kid.status === 'Gestación' ? 'status-gestacion' : (kid.status === 'Tratamiento' ? 'status-tratamiento' : 'status-saludable')}">${escapeHTML(kid.status)}</span>
+            </div>
+        `;
+    }).join('');
+
+    section.querySelectorAll('.cria-item').forEach(item => {
+        item.addEventListener('click', () => {
+            openRabbitDetail(Number(item.getAttribute('data-rabbit-id')));
+        });
+    });
 }
 
 // ===== Pestaña "Reproducción": montas y camadas donde el ejemplar participa =====
