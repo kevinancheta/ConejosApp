@@ -939,6 +939,12 @@ body::-webkit-scrollbar,
     flex-shrink: 0;
 }
 
+.alert-emoji-icon {
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
 .alert-text strong {
     font-size: 0.85rem;
     font-weight: 700;
@@ -1239,6 +1245,23 @@ body::-webkit-scrollbar,
     text-align: center;
 }
 
+/* En vez de display:none: algunos navegadores/WebView de Android no abren
+   el selector de archivos de forma confiable si el <input type="file">
+   está completamente fuera del render. Con esto sigue "presente" (0x0px,
+   invisible) pero se puede disparar tanto por el <label for="..."> como
+   por click() desde JS. */
+.visually-hidden-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* ================= FICHA DE EJEMPLAR: FOTO GRANDE Y ESTADÍSTICAS ================= */
 .detail-photo-container {
     margin-top: 1rem;
@@ -1254,7 +1277,7 @@ body::-webkit-scrollbar,
 
 .detail-stats-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
     gap: 0.7rem;
     margin-top: 1.2rem;
 }
@@ -1664,7 +1687,7 @@ body::-webkit-scrollbar,
 
 .gazapo-edit-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
     gap: 0.9rem;
 }
 
