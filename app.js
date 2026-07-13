@@ -921,20 +921,7 @@ const modalRabbitPhotoInput = document.getElementById('modal-rabbit-photo');
 const modalRabbitPhotoPreview = document.getElementById('modal-rabbit-photo-preview');
 const modalRabbitPhotoPlaceholder = document.getElementById('modal-rabbit-photo-placeholder');
 const modalRabbitPhotoRemoveBtn = document.getElementById('modal-rabbit-photo-remove');
-const modalRabbitPhotoLabel = document.getElementById('modal-rabbit-photo-label');
 let currentPhotoDataUrl = null; // Foto (base64) que se guardará junto al conejo
-
-// Respaldo explícito además del <label for="modal-rabbit-photo">: en algunos
-// navegadores/WebView de Android el label no siempre logra disparar el
-// selector de archivos de forma confiable al tocar con el dedo, así que
-// forzamos el click() del input directamente y evitamos el comportamiento
-// por defecto para no abrir el selector dos veces.
-if (modalRabbitPhotoLabel) {
-    modalRabbitPhotoLabel.addEventListener('click', (e) => {
-        e.preventDefault();
-        modalRabbitPhotoInput.click();
-    });
-}
 
 // editingRabbitId: null = alta de un ejemplar nuevo, número = edición de un ejemplar existente
 let editingRabbitId = null;
@@ -2589,134 +2576,6 @@ function renderRabbitDoses(rabbitId) {
     section.innerHTML = html;
 }
 
-// --- Recordatorios dinámicos del Inicio ---
-// Junta, a partir de los datos reales del criadero, todo lo que el usuario
-// tiene pendiente: gazapos recién nacidos sin datos completos, crías listas
-// para destetar, vacunas atrasadas o próximas, refuerzos pendientes y
-// ejemplares en cuarentena. Se recalcula cada vez que cambia algo (ver
-// saveStateAndRender) para que siempre esté al día.
-function computeReminders() {
-    const reminders = [];
-
-    // 1. Gazapos recién nacidos con datos por completar (sexo sin asignar)
-    const pendingDataGazapos = state.rabbits.filter(r => r.weaned === false && r.gender === 'Gazapo');
-    if (pendingDataGazapos.length > 0) {
-        const byMother = {};
-        pendingDataGazapos.forEach(g => {
-            byMother[g.motherId] = (byMother[g.motherId] || 0) + 1;
-        });
-        Object.entries(byMother).forEach(([motherId, count]) => {
-            const mother = getRabbitById(Number(motherId));
-            reminders.push({
-                type: 'warning',
-                icon: '🐣',
-                title: `Completar datos de ${count} gazapo${count === 1 ? '' : 's'}`,
-                desc: mother
-                    ? `Cría${count === 1 ? '' : 's'} de ${mother.name}: falta asignar sexo, color u observaciones`
-                    : 'Hay crías nuevas sin datos completos'
-            });
-        });
-    }
-
-    // 2. Crías pendientes de destete
-    state.rabbits
-        .filter(r => r.gender === 'Hembra' && getPendingKits(r.id).length > 0)
-        .forEach(mother => {
-            const pending = getPendingKits(mother.id).length;
-            reminders.push({
-                type: 'warning',
-                icon: '🐇',
-                title: `Revisar gazapos de ${mother.name}`,
-                desc: `${pending} cría${pending === 1 ? '' : 's'} pendiente${pending === 1 ? '' : 's'} de destete`
-            });
-        });
-
-    // 3. Vacunas programadas: atrasadas o próximas (7 días)
-    state.vaccines
-        .filter(v => v.type === 'programada' && daysUntil(v.date) !== null && daysUntil(v.date) <= 7)
-        .sort((a, b) => daysUntil(a.date) - daysUntil(b.date))
-        .forEach(v => {
-            const rabbit = getRabbitById(v.rabbitId);
-            const diff = daysUntil(v.date);
-            const name = rabbit ? rabbit.name : 'Ejemplar eliminado';
-            if (diff < 0) {
-                reminders.push({
-                    type: 'danger',
-                    icon: '💉',
-                    title: `Vacuna atrasada: ${v.vaccine}`,
-                    desc: `${name} — hace ${Math.abs(diff)} día${Math.abs(diff) === 1 ? '' : 's'} (${v.date})`
-                });
-            } else {
-                const when = diff === 0 ? 'Hoy' : (diff === 1 ? 'Mañana' : `En ${diff} días`);
-                reminders.push({
-                    type: 'success',
-                    icon: '💉',
-                    title: `Vacunar a ${name}: ${v.vaccine}`,
-                    desc: `${when} (${v.date})`
-                });
-            }
-        });
-
-    // 4. Refuerzos de vacunas ya aplicadas, con próxima dosis cerca (7 días) o atrasada
-    state.vaccines
-        .filter(v => v.type === 'aplicada' && v.nextDoseDate && daysUntil(v.nextDoseDate) !== null && daysUntil(v.nextDoseDate) <= 7)
-        .sort((a, b) => daysUntil(a.nextDoseDate) - daysUntil(b.nextDoseDate))
-        .forEach(v => {
-            const rabbit = getRabbitById(v.rabbitId);
-            const diff = daysUntil(v.nextDoseDate);
-            const name = rabbit ? rabbit.name : 'Ejemplar eliminado';
-            const when = diff < 0
-                ? `Atrasado ${Math.abs(diff)} día${Math.abs(diff) === 1 ? '' : 's'}`
-                : (diff === 0 ? 'Hoy' : (diff === 1 ? 'Mañana' : `En ${diff} días`));
-            reminders.push({
-                type: diff < 0 ? 'danger' : 'success',
-                icon: '💉',
-                title: `Refuerzo pendiente: ${v.vaccine}`,
-                desc: `${name} — ${when} (${v.nextDoseDate})`
-            });
-        });
-
-    // 5. Ejemplares en cuarentena activa
-    if (state.quarantine.length > 0) {
-        reminders.push({
-            type: 'warning',
-            icon: '🛡️',
-            title: `${state.quarantine.length} ejemplar${state.quarantine.length === 1 ? '' : 'es'} en cuarentena`,
-            desc: 'Revisá su evolución y tratamiento'
-        });
-    }
-
-    // Atrasadas primero, después lo que requiere atención, después lo próximo
-    const order = { danger: 0, warning: 1, success: 2 };
-    reminders.sort((a, b) => order[a.type] - order[b.type]);
-    return reminders;
-}
-
-// Pinta la lista de recordatorios en TODAS las tarjetas "Recordatorios" que
-// haya en pantalla (la de arriba en móvil y la de la columna derecha en
-// escritorio comparten la misma clase .reminders-list, así que se actualizan
-// juntas con una sola llamada).
-function renderReminders() {
-    const lists = document.querySelectorAll('.reminders-list');
-    if (lists.length === 0) return;
-
-    const reminders = computeReminders();
-
-    const html = reminders.length === 0
-        ? `<p class="empty-dose-text">No tenés recordatorios pendientes por ahora. ¡Todo al día! ✅</p>`
-        : reminders.map(r => `
-            <div class="alert-box alert-${r.type}">
-                <span class="alert-emoji-icon">${r.icon}</span>
-                <div class="alert-text">
-                    <strong>${escapeHTML(r.title)}</strong>
-                    <p>${escapeHTML(r.desc)}</p>
-                </div>
-            </div>
-        `).join('');
-
-    lists.forEach(list => { list.innerHTML = html; });
-}
-
 // --- Actualización de Métricas del Dashboard ---
 function updateDashboardMetrics() {
     // Solo cuenta como "plantel activo" a los ejemplares ya destetados
@@ -2738,8 +2597,6 @@ function updateDashboardMetrics() {
     // 4. Cuarentenas activas
     const totalQuarantine = state.quarantine.length;
     document.querySelectorAll('.metric-card')[3].querySelector('h3').textContent = totalQuarantine;
-
-    renderReminders();
 
     // 5. Actualizar el Donut Chart del Dashboard (Machos, Hembras, Gazapos)
     const machos = activeRabbits.filter(r => r.gender === 'Macho').length;

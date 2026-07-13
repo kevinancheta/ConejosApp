@@ -406,11 +406,23 @@
                     </div>
 
                     <!-- Recordatorios (Móvil) - lo primero que se ve -->
-                    <!-- El contenido real se genera dinámicamente en app.js (renderReminders) -->
                     <div class="card card-widget mobile-only" id="mobile-reminders-card">
                         <h3>Recordatorios</h3>
                         <div class="reminders-list">
-                            <p class="empty-dose-text">Cargando recordatorios...</p>
+                            <div class="alert-box alert-success">
+                                <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                <div class="alert-text">
+                                    <strong>No olvides revisar el estado de salud</strong>
+                                    <p>Revisa diariamente el comportamiento y apetito</p>
+                                </div>
+                            </div>
+                            <div class="alert-box alert-warning">
+                                <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <div class="alert-text">
+                                    <strong>Próxima limpieza general</strong>
+                                    <p>Programada para el 20/07/2025</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -670,7 +682,20 @@
                             <div class="card card-widget desktop-only">
                                 <h3>Recordatorios</h3>
                                 <div class="reminders-list">
-                                    <p class="empty-dose-text">Cargando recordatorios...</p>
+                                    <div class="alert-box alert-success">
+                                        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                        <div class="alert-text">
+                                            <strong>No olvides revisar el estado de salud</strong>
+                                            <p>Revisa diariamente el comportamiento y apetito</p>
+                                        </div>
+                                    </div>
+                                    <div class="alert-box alert-warning">
+                                        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <div class="alert-text">
+                                            <strong>Próxima limpieza general</strong>
+                                            <p>Programada para el 20/07/2025</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1165,10 +1190,10 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                         </div>
                         <div class="photo-upload-actions">
-                            <label for="modal-rabbit-photo" id="modal-rabbit-photo-label" class="btn btn-outline btn-sm photo-upload-btn">Elegir foto</label>
+                            <label for="modal-rabbit-photo" class="btn btn-outline btn-sm photo-upload-btn">Elegir foto</label>
                             <button type="button" id="modal-rabbit-photo-remove" class="btn btn-outline btn-sm" style="display:none;">Quitar</button>
                         </div>
-                        <input type="file" id="modal-rabbit-photo" accept="image/*" class="visually-hidden-file-input">
+                        <input type="file" id="modal-rabbit-photo" accept="image/*" style="display:none;">
                     </div>
                 </div>
 
