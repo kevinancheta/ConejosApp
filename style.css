@@ -35,7 +35,6 @@
     box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none;
 }
 
 /* ================= PANTALLA COMPLETA NATIVA (ANDROID WEBVIEW) =================
