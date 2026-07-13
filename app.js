@@ -77,7 +77,11 @@ function showSubPage(sectionId) {
         'sec-configuracion': 'Configuración'
     };
     pageTitle.textContent = nameMap[sectionId] || 'Panel de Control';
-    
+
+    // Marca en el <body> si la sección activa es "Inicio", para poder
+    // ocultar el header superior solo ahí y solo en celulares chicos (CSS).
+    document.body.classList.toggle('is-home-section', sectionId === 'sec-inicio');
+
     // Cerrar sidebar y modales en móviles al navegar
     document.querySelector('.sidebar').classList.remove('active');
     moreMenuModal.classList.remove('active');

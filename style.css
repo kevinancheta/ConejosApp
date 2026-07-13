@@ -1562,9 +1562,13 @@ body::-webkit-scrollbar,
 }
 
 /* ================= LISTADO DE EJEMPLARES EN VACUNACIÓN ================= */
+/* auto-fit (en vez de auto-fill) + justify-content centra las tarjetas como
+   grupo cuando hay menos ejemplares que columnas posibles, en vez de dejarlas
+   pegadas a la izquierda con un espacio vacío raro a la derecha. */
 .mini-rabbit-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 200px));
+    justify-content: center;
     gap: 0.9rem;
 }
 
@@ -2248,6 +2252,20 @@ body::-webkit-scrollbar,
 @media (max-width: 480px) {
     .admin-users-table {
         min-width: 680px;
+    }
+}
+
+/* ================= OCULTAR HEADER SUPERIOR EN "INICIO" (SOLO CELULARES CHICOS) =================
+   En pantallas de celular chicas, la tarjeta ".mobile-welcome" (saludo +
+   nombre) ya cumple la función del header de arriba, así que el header con
+   el menú hamburguesa, buscador y campana queda de más solo en esa sección.
+   Se oculta con la clase "is-home-section" que app.js pone en <body> cuando
+   la subpágina activa es Inicio. En el resto de pantallas (Reproducción,
+   Cuarentena, etc.) y en tablet/desktop el header se sigue mostrando igual
+   que antes. */
+@media (max-width: 480px) {
+    body.is-home-section .main-header {
+        display: none;
     }
 }
 
