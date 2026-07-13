@@ -35,12 +35,49 @@
     box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+/* ================= PANTALLA COMPLETA NATIVA (ANDROID WEBVIEW) =================
+   Elimina cualquier margen/espacio en blanco, bloquea el efecto de rebote
+   (overscroll) y oculta las barras de desplazamiento en toda la app, tanto
+   en el contenedor principal como en cualquier subcontenedor con scroll. */
+html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    background-color: #f0f4f2;
 }
 
 body {
     background-color: #f0f4f2;
     color: var(--text-dark);
+    width: 100%;
+    height: 100%;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Oculta las barras de desplazamiento en Chrome/WebView (Android) y Safari,
+   sin desactivar la posibilidad de hacer scroll con el dedo. */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 /* ================= ENRUTAMIENTO SPA PANTALLAS PRINCIPALES ================= */
@@ -1811,6 +1848,7 @@ body {
     justify-content: center;
     z-index: 200;
     padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     backdrop-filter: blur(4px);
 }
 
@@ -1855,7 +1893,8 @@ body {
     
     .main-content {
         margin-left: 0;
-        padding-bottom: 76px; /* Evitar que el bottom-nav tape el contenido */
+        /* Evitar que el bottom-nav (ahora más alto por la zona segura) tape el contenido */
+        padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
     
     .hamburger-btn {
@@ -2000,14 +2039,17 @@ body {
         bottom: 0;
         left: 0;
         right: 0;
-        height: 68px;
+        /* La altura visible sigue siendo 68px; se suma el alto de la barra
+           de gestos/navegación del sistema como padding, para que los
+           botones nunca queden debajo de ella. */
+        height: calc(68px + env(safe-area-inset-bottom, 0px));
         background-color: #ffffff;
         border-top: 1px solid var(--border-color);
         box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.03);
         z-index: 100;
         justify-content: space-around;
         align-items: center;
-        padding: 0 0.5rem;
+        padding: 0 0.5rem env(safe-area-inset-bottom, 0px) 0.5rem;
     }
     
     .nav-btn {
