@@ -1928,34 +1928,18 @@ body::-webkit-scrollbar,
 
 /* ================= DISEÑO RESPONSIVO (MÓVIL) ================= */
 @media (max-width: 820px) {
-    /* Layout de columna a pantalla completa: el header y el contenido
-       scrollean adentro de su propio espacio, y el menú inferior queda
-       como un hermano flex fuera del área con scroll, así que nunca se
-       mueve ni se tapa, sin depender de position:fixed (que en algunos
-       WebView de Android se "despega" al hacer scroll). */
-    html, body {
-        height: 100%;
-    }
-
+    /* El body scrollea de forma natural (como al principio) para que el
+       teclado del celular no tape los botones al escribir en un formulario:
+       si se fuerza una altura de 100dvh con overflow:hidden, en varios
+       Android el teclado reduce el viewport visual pero el layout no se
+       recalcula bien y el contenido/los botones quedan "atrapados" fuera
+       de la parte visible. En vez de eso, el menú inferior usa
+       position:sticky (no fixed): queda igual de anclado abajo de la
+       pantalla en todo momento, pero al ser parte del flujo normal del
+       documento no sufre el bug de WebView donde los elementos "fixed"
+       se despegan al hacer scroll, y tampoco interfiere con el teclado. */
     .app-dashboard-layout {
         flex-direction: column;
-        height: 100vh;
-        height: 100dvh;
-        overflow: hidden;
-    }
-
-    .main-content {
-        flex: 1;
-        min-width: 0;
-        min-height: 0;
-        overflow: hidden;
-    }
-
-    .sections-wrapper {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .sidebar {
@@ -2112,14 +2096,18 @@ body::-webkit-scrollbar,
     }
     
     /* --- BARRA DE NAVEGACIÓN INFERIOR (MÓVIL) ---
-       Ya no usa position:fixed: al ser un hermano flex de .main-content
-       dentro de .app-dashboard-layout (que ahora mide 100dvh con overflow
-       hidden, y solo .sections-wrapper scrollea por dentro), esta barra
-       queda "anclada" abajo por estructura y nunca se mueve ni se tapa. */
+       position:sticky en vez de fixed: como es el último elemento de la
+       página y el body scrollea de forma natural, queda pegada abajo de
+       la pantalla en todo momento (igual que "fixed"), pero al ser parte
+       del flujo normal no tiene el bug de algunos WebView de Android
+       donde los elementos fixed se despegan al hacer scroll, y tampoco
+       necesita bloquear la altura de la pantalla (lo que rompía el
+       formulario cuando se abría el teclado). */
     .bottom-nav {
         display: flex;
         flex-shrink: 0;
-        position: relative;
+        position: sticky;
+        bottom: 0;
         /* La altura visible sigue siendo 68px; se suma el alto de la barra
            de gestos/navegación del sistema como padding, para que los
            botones nunca queden debajo de ella. */
