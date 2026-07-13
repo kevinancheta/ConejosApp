@@ -47,7 +47,19 @@ html {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    /* Ojo con poner "overflow" (en cualquiera de sus 2 ejes) en <html>:
+       el navegador elige quién es el "elemento de scroll" del documento
+       (document.scrollingElement) así → si <html> tiene overflow "visible"
+       en AMBOS ejes (o no se declara), ese rol lo toma <body>; apenas
+       <html> declara overflow distinto de "visible" en cualquiera de los
+       2 ejes (aunque sea solo "overflow-x: hidden"), <html> pasa a ser el
+       elemento de scroll... pero <html> mismo no tiene contenido que
+       desborde (mide igual que la pantalla), así que la rueda del mouse y
+       el arrastre táctil dejan de mover nada, aunque <body> sí tenga
+       overflow-y:auto y contenido de sobra para scrollear. Por eso NO se
+       declara overflow acá: dejamos que <body> sea el elemento de scroll
+       real (el rebote ya se evita con "overscroll-behavior: none" de
+       abajo, y el desborde horizontal se corta en <body> más abajo). */
     overscroll-behavior: none;
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -1905,6 +1917,19 @@ body::-webkit-scrollbar,
     padding: 2rem 1.5rem;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     animation: modalSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    /* Sin esto, un formulario largo (como "Registrar Ejemplar", con foto,
+       nombre, raza, estado, fechas, madre/padre, jaula, etc.) puede medir
+       más que la pantalla del celular. Como el overlay que lo contiene
+       centra con "align-items: center" y ni el overlay ni esta tarjeta
+       tenían scroll propio, la parte de arriba y de abajo del formulario
+       (botón "Elegir foto", "Guardar", campos del final) quedaban fuera de
+       la pantalla y sin ninguna forma de llegar a ellos: no es que el botón
+       de subir foto no funcionara, es que no se podía ni tocar porque
+       estaba fuera del área visible. */
+    max-height: calc(100vh - 2rem - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 2rem - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Footer Desktop */
