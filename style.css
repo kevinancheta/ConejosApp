@@ -125,7 +125,8 @@ body::-webkit-scrollbar,
     flex-direction: column;
     position: relative;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.03);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     margin: 0 auto;
 }
 
