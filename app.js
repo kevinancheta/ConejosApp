@@ -2700,5 +2700,3 @@ window.addEventListener('load', () => {
         }
     });
 });
-
-probarSupabase();
