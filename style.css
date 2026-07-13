@@ -1885,6 +1885,10 @@ body::-webkit-scrollbar,
     display: none;
 }
 
+.mobile-only {
+    display: none;
+}
+
 /* ================= DISEÑO RESPONSIVO (MÓVIL) ================= */
 @media (max-width: 820px) {
     .sidebar {
@@ -1929,6 +1933,12 @@ body::-webkit-scrollbar,
         border: 1px solid var(--border-color);
         margin-bottom: 1.2rem;
         box-shadow: var(--shadow);
+    }
+
+    /* Recordatorios: primero que se ve en móvil */
+    .mobile-only {
+        display: block;
+        margin-bottom: 1.2rem;
     }
     
     .welcome-text h2 {
