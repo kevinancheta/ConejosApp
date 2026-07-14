@@ -1213,6 +1213,11 @@ body::-webkit-scrollbar,
     transform: translateY(-1px);
 }
 
+.pedigree-row-great .pedigree-chip {
+    font-size: 0.72rem;
+    padding: 0.3rem 0.7rem;
+}
+
 .rabbit-parents-line {
     font-size: 0.78rem;
     color: var(--text-muted);
@@ -2612,4 +2617,139 @@ body::-webkit-scrollbar,
     .rabbit-page-fab {
         right: calc(50% - 280px + 1.5rem);
     }
+}
+
+/* ================= CONTROL DE CONSANGUINIDAD ================= */
+.kinship-result-card {
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.2rem;
+    border: 2px solid transparent;
+}
+
+.kinship-result-card.riesgo-verde {
+    background-color: #f0fff4;
+    border-color: #9ae6b4;
+    color: #22543d;
+}
+
+.kinship-result-card.riesgo-amarillo {
+    background-color: #fffaf0;
+    border-color: #fbd38d;
+    color: #744210;
+}
+
+.kinship-result-card.riesgo-rojo {
+    background-color: #fff5f5;
+    border-color: #feb2b2;
+    color: #822727;
+}
+
+.kinship-result-top {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.4rem;
+}
+
+.kinship-result-emoji {
+    font-size: 1.6rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.kinship-result-headline {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.kinship-result-headline strong {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.kinship-result-headline span {
+    font-size: 0.78rem;
+    opacity: 0.85;
+    font-weight: 600;
+}
+
+.kinship-result-percent {
+    font-size: 1.4rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.kinship-result-card p {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-top: 0.3rem;
+}
+
+.kinship-consequences-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 0.7rem;
+    margin-bottom: 0.3rem;
+}
+
+#kinship-consequences-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+#kinship-consequences-list li {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+/* Modal de advertencia antes de guardar una cruza de alto riesgo */
+.kinship-warning-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.2rem;
+}
+
+.kinship-warning-header span {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.kinship-warning-header h3 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--red);
+}
+
+.kinship-consequences-list-modal {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.kinship-consequences-list-modal li {
+    background-color: #fff5f5;
+    border: 1px solid #fed7d7;
+    color: #822727;
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.8rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+#breeding-risk-modal .social-modal-card {
+    max-width: 420px;
 }

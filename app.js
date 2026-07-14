@@ -1138,53 +1138,124 @@ function getAncestors(rabbitId, maxGen = 4) {
     return map;
 }
 
-// Verifica el riesgo de consanguinidad entre dos ejemplares candidatos a cruzarse
-// Devuelve { level: 'alto' | 'medio' | 'bajo' | 'desconocido', message }
+// Tabla de referencia orientativa de riesgo genético según el tipo de parentesco
+const KINSHIP_RISK_TABLE = {
+    ninguno: { level: 'verde', percent: 5, label: 'Sin parentesco cercano' },
+    primos: { level: 'amarillo', percent: 10, label: 'Primos' },
+    tio_sobrina: { level: 'amarillo', percent: 20, label: 'Tío/tía × sobrino/a' },
+    abuelo_nieta: { level: 'rojo', percent: 35, label: 'Abuelo/a × nieto/a' },
+    medios_hermanos: { level: 'rojo', percent: 45, label: 'Medios hermanos' },
+    padre_hija: { level: 'rojo', percent: 60, label: 'Padre × hija' },
+    madre_hijo: { level: 'rojo', percent: 60, label: 'Madre × hijo' },
+    hermanos: { level: 'rojo', percent: 70, label: 'Hermano × hermana' },
+    mismo: { level: 'rojo', percent: 100, label: 'Mismo ejemplar' }
+};
+
+const KINSHIP_CONSEQUENCES = ['Malformaciones', 'Problemas dentales', 'Gazapos muertos', 'Baja fertilidad', 'Debilidad inmunológica'];
+
+// Verifica el riesgo de consanguinidad entre dos ejemplares candidatos a cruzarse.
+// Analiza padres, abuelos, bisabuelos, hermanos, medios hermanos, tíos, primos y
+// descendientes usando todo el árbol genealógico disponible.
+// Devuelve { level: 'rojo'|'amarillo'|'verde', percent, relation, message, consequences }
 function checkKinship(idA, idB) {
     if (!idA || !idB) {
-        return { level: 'desconocido', message: 'Selecciona la madre y el padre para verificar el parentesco.' };
+        return { level: 'desconocido', percent: null, relation: null, message: 'Selecciona la madre y el padre para verificar el parentesco.', consequences: [] };
     }
     if (idA === idB) {
-        return { level: 'alto', message: 'Es el mismo ejemplar. No es posible registrar este cruce.' };
+        const ref = KINSHIP_RISK_TABLE.mismo;
+        return { level: ref.level, percent: ref.percent, relation: ref.label, message: 'Es el mismo ejemplar. No es posible registrar este cruce.', consequences: [] };
     }
 
     const a = getRabbitById(idA);
     const b = getRabbitById(idB);
     if (!a || !b) {
-        return { level: 'desconocido', message: 'No se encontró información de uno de los ejemplares seleccionados.' };
+        return { level: 'desconocido', percent: null, relation: null, message: 'No se encontró información de uno de los ejemplares seleccionados.', consequences: [] };
     }
 
+    const finish = (key, extraMsg) => {
+        const ref = KINSHIP_RISK_TABLE[key];
+        const msg = extraMsg || (ref.level === 'rojo'
+            ? `Riesgo elevado de problemas genéticos en la cría.`
+            : ref.level === 'amarillo'
+                ? 'Existe parentesco lejano. Se recomienda utilizar otro reproductor para reducir riesgos genéticos.'
+                : 'No se detectó consanguinidad cercana. Cruza recomendada.');
+        return {
+            level: ref.level,
+            percent: ref.percent,
+            relation: ref.label,
+            message: msg,
+            consequences: ref.level === 'rojo' ? KINSHIP_CONSEQUENCES : []
+        };
+    };
+
     // Relación directa: uno es padre/madre del otro
-    if (a.motherId === idB || a.fatherId === idB || b.motherId === idA || b.fatherId === idA) {
-        return { level: 'alto', message: 'Relación directa: uno de los ejemplares es padre o madre del otro. No se recomienda este cruce.' };
+    if (a.motherId === idB || a.fatherId === idB) {
+        return finish(b.gender === 'Macho' ? 'padre_hija' : 'madre_hijo', `${a.name} es hijo/a de ${b.name}.`);
+    }
+    if (b.motherId === idA || b.fatherId === idA) {
+        return finish(a.gender === 'Macho' ? 'padre_hija' : 'madre_hijo', `${b.name} es hijo/a de ${a.name}.`);
     }
 
     // Hermanos (comparten uno o ambos progenitores)
     const sameMother = a.motherId && b.motherId && a.motherId === b.motherId;
     const sameFather = a.fatherId && b.fatherId && a.fatherId === b.fatherId;
     if (sameMother && sameFather) {
-        return { level: 'alto', message: 'Son hermanos completos (misma madre y mismo padre). Alto riesgo de consanguinidad.' };
+        return finish('hermanos', 'Son hermanos completos (misma madre y mismo padre).');
     }
     if (sameMother || sameFather) {
-        return { level: 'alto', message: 'Son medios hermanos (comparten un progenitor). Alto riesgo de consanguinidad.' };
+        return finish('medios_hermanos', 'Son medios hermanos (comparten un progenitor).');
     }
 
-    // Ancestros en común más allá de los padres (abuelos, etc.)
     const ancA = getAncestors(idA);
     const ancB = getAncestors(idB);
+
+    // Abuelo/a × nieto/a: uno de los dos aparece como ancestro directo del otro a 2 generaciones
+    if (ancB.has(idA) && ancB.get(idA).gen === 2) {
+        return finish('abuelo_nieta', `${a.name} es abuelo/a de ${b.name}.`);
+    }
+    if (ancA.has(idB) && ancA.get(idB).gen === 2) {
+        return finish('abuelo_nieta', `${b.name} es abuelo/a de ${a.name}.`);
+    }
+
+    // Tío/tía × sobrino/a: uno es hermano (o medio hermano) de un progenitor del otro
+    const bParents = [b.motherId, b.fatherId].filter(Boolean);
+    const aParents = [a.motherId, a.fatherId].filter(Boolean);
+    const isSiblingOf = (id1, id2) => {
+        const r1 = getRabbitById(id1), r2 = getRabbitById(id2);
+        if (!r1 || !r2) return false;
+        return (r1.motherId && r1.motherId === r2.motherId) || (r1.fatherId && r1.fatherId === r2.fatherId);
+    };
+    if (bParents.some(pid => isSiblingOf(idA, pid))) {
+        return finish('tio_sobrina', `${a.name} es tío/tía de ${b.name}.`);
+    }
+    if (aParents.some(pid => isSiblingOf(idB, pid))) {
+        return finish('tio_sobrina', `${b.name} es tío/tía de ${a.name}.`);
+    }
+
+    // Primos: los progenitores de A y de B son hermanos entre sí (comparten un abuelo común)
+    let arePrimos = false;
+    aParents.forEach(pa => {
+        bParents.forEach(pb => {
+            if (pa && pb && isSiblingOf(pa, pb)) arePrimos = true;
+        });
+    });
+    if (arePrimos) {
+        return finish('primos');
+    }
+
+    // Cualquier otro ancestro en común más lejano (bisabuelos u otros) → parentesco lejano
     const common = [];
     ancA.forEach((valA, id) => {
         if (ancB.has(id)) {
             common.push({ rabbit: valA.rabbit, gen: valA.gen + ancB.get(id).gen });
         }
     });
-
     if (common.length > 0) {
         const detalle = common.map(c => `${c.rabbit.name} (a ${c.gen} generaciones de distancia)`).join(', ');
-        return { level: 'medio', message: `Comparten ancestro(s) en común: ${detalle}. Se recomienda precaución.` };
+        return finish('primos', `Comparten ancestro(s) en común: ${detalle}.`);
     }
 
-    return { level: 'bajo', message: 'No se detectó parentesco entre estos ejemplares según los registros. Cruce compatible.' };
+    return finish('ninguno');
 }
 
 // ================= EDAD Y PESO ESPERADO SEGÚN RAZA =================
@@ -1467,6 +1538,16 @@ function openRabbitDetail(rabbitId) {
     const paternalGrandmother = father && father.motherId ? getRabbitById(father.motherId) : null;
     const paternalGrandfather = father && father.fatherId ? getRabbitById(father.fatherId) : null;
 
+    // Bisabuelos: los cuatro padres de cada uno de los cuatro abuelos (hasta 8 ejemplares)
+    const greatGrandparentsOf = (grandparent) => grandparent
+        ? [grandparent.motherId ? getRabbitById(grandparent.motherId) : null, grandparent.fatherId ? getRabbitById(grandparent.fatherId) : null]
+        : [null, null];
+    const [mmGm, mmGf] = greatGrandparentsOf(maternalGrandmother); // abuela materna de la madre / abuelo materno de la madre
+    const [mfGm, mfGf] = greatGrandparentsOf(maternalGrandfather);
+    const [pmGm, pmGf] = greatGrandparentsOf(paternalGrandmother);
+    const [pfGm, pfGf] = greatGrandparentsOf(paternalGrandfather);
+    const hasAnyGreatGrandparent = [mmGm, mmGf, mfGm, mfGf, pmGm, pmGf, pfGm, pfGf].some(Boolean);
+
     const tree = document.getElementById('detail-pedigree-tree');
     tree.innerHTML = `
         <div>
@@ -1485,6 +1566,17 @@ function openRabbitDetail(rabbitId) {
                 ${pedigreeChip(paternalGrandfather)}
             </div>
         </div>
+        ${(mother || father) ? `
+        <div>
+            <div class="pedigree-gen-label">Bisabuelos</div>
+            <div class="pedigree-row pedigree-row-great">
+                ${pedigreeChip(mmGm)}${pedigreeChip(mmGf)}
+                ${pedigreeChip(mfGm)}${pedigreeChip(mfGf)}
+                ${pedigreeChip(pmGm)}${pedigreeChip(pmGf)}
+                ${pedigreeChip(pfGm)}${pedigreeChip(pfGf)}
+            </div>
+        </div>
+        ` : ''}
     `;
 
     // Al tocar un familiar (chip clicable) se abre su propia ficha
@@ -1524,6 +1616,9 @@ function renderRabbitOffspring(rabbit) {
     const section = document.getElementById('detail-offspring-section');
     if (!section) return;
 
+    const titleEl = document.getElementById('detail-offspring-title');
+    if (titleEl) titleEl.textContent = rabbit.gender === 'Macho' ? 'HIJOS' : 'CRÍA';
+
     const kids = state.rabbits
         .filter(r => r.motherId === rabbit.id || r.fatherId === rabbit.id)
         .sort((a, b) => new Date(b.birthDate || 0) - new Date(a.birthDate || 0));
@@ -1537,12 +1632,28 @@ function renderRabbitOffspring(rabbit) {
         const ageDays = getAgeInDays(kid.birthDate);
         const ageText = formatAgeText(ageDays);
         const photoUrl = kid.photo || 'assets/default-rabbit.jpg';
+
+        // El otro progenitor (si el conejo actual es la madre, mostramos al padre y viceversa)
+        const otherParentId = rabbit.gender === 'Macho' ? kid.motherId : kid.fatherId;
+        const otherParent = otherParentId ? getRabbitById(otherParentId) : null;
+        const otherParentLabel = rabbit.gender === 'Macho' ? 'Madre' : 'Padre';
+
+        // Cantidad de hermanos: otros gazapos con el mismo padre y madre (excluyendo al propio kid)
+        const siblingsCount = state.rabbits.filter(r =>
+            r.id !== kid.id && kid.motherId && kid.fatherId &&
+            r.motherId === kid.motherId && r.fatherId === kid.fatherId
+        ).length;
+
+        const subParts = [ageText];
+        if (otherParent) subParts.push(`${otherParentLabel}: ${otherParent.name}`);
+        if (siblingsCount > 0) subParts.push(`${siblingsCount} hermano${siblingsCount === 1 ? '' : 's'}`);
+
         return `
             <div class="cria-item" data-rabbit-id="${kid.id}">
                 <img src="${photoUrl}" alt="${escapeHTML(kid.name)}">
                 <div class="cria-info">
                     <div class="cria-name">${escapeHTML(kid.name)} <span class="rabbit-id-tag">${formatRabbitCode(kid.code)}</span></div>
-                    <div class="cria-sub">${escapeHTML(ageText)}${kid.birthDate ? ' • ' + kid.birthDate : ''}</div>
+                    <div class="cria-sub">${subParts.map(escapeHTML).join(' • ')}</div>
                 </div>
                 <span class="status-tag ${kid.status === 'Gestación' ? 'status-gestacion' : (kid.status === 'Tratamiento' ? 'status-tratamiento' : 'status-saludable')}">${escapeHTML(kid.status)}</span>
             </div>
@@ -1592,13 +1703,14 @@ function renderRabbitBreeding(rabbit) {
             html += `<div class="dose-list">` + asMotherBirths.map(b => {
                 const live = b.liveCount !== undefined ? b.liveCount : (b.count || 0);
                 const dead = b.deadCount || 0;
-                const liveText = `${live} vivo${live === 1 ? '' : 's'}`;
-                const deadText = dead > 0 ? ` • ${dead} muerto${dead === 1 ? '' : 's'}` : '';
+                const total = live + dead;
+                const fatherRabbit = b.fatherId ? getRabbitById(b.fatherId) : null;
+                const fatherText = fatherRabbit ? fatherRabbit.name : 'Desconocido / Externo';
                 return `
                 <div class="dose-item">
                     <div>
-                        <span class="dose-name">${liveText}${deadText}</span><br>
-                        <span class="dose-date">${b.date}${b.notes ? ' • ' + escapeHTML(b.notes) : ''}</span>
+                        <span class="dose-name">${total} gazapo${total === 1 ? '' : 's'} • ${live} superviviente${live === 1 ? '' : 's'}</span><br>
+                        <span class="dose-date">${b.date} • Padre: ${escapeHTML(fatherText)}${b.notes ? ' • ' + escapeHTML(b.notes) : ''}</span>
                     </div>
                 </div>
             `;
@@ -1951,7 +2063,13 @@ function populateBreedingSelects() {
     if (fathers.some(r => String(r.id) === currentFather)) breedFatherSelect.value = currentFather;
 }
 
-// Muestra el resultado del chequeo de consanguinidad en un cuadro de alerta
+const kinshipEmoji = document.getElementById('kinship-emoji');
+const kinshipRelation = document.getElementById('kinship-relation');
+const kinshipPercent = document.getElementById('kinship-percent');
+const kinshipConsequencesBox = document.getElementById('kinship-consequences');
+const kinshipConsequencesList = document.getElementById('kinship-consequences-list');
+
+// Muestra el resultado del chequeo de consanguinidad en una tarjeta grande de color
 function renderKinshipCheck() {
     const motherId = breedMotherSelect.value ? Number(breedMotherSelect.value) : null;
     const fatherId = breedFatherSelect.value ? Number(breedFatherSelect.value) : null;
@@ -1964,17 +2082,28 @@ function renderKinshipCheck() {
     const result = checkKinship(motherId, fatherId);
 
     const levelConfig = {
-        alto: { cls: 'alert-danger', title: '⚠️ Riesgo alto de consanguinidad' },
-        medio: { cls: 'alert-warning', title: '⚠️ Riesgo moderado, revisa el parentesco' },
-        bajo: { cls: 'alert-success', title: '✅ Cruce compatible' },
-        desconocido: { cls: 'alert-warning', title: 'Verificando parentesco' }
+        rojo: { cls: 'riesgo-rojo', emoji: '🔴', title: 'Consanguinidad alta' },
+        amarillo: { cls: 'riesgo-amarillo', emoji: '🟡', title: 'Consanguinidad moderada' },
+        verde: { cls: 'riesgo-verde', emoji: '🟢', title: 'Riesgo genético' },
+        desconocido: { cls: 'riesgo-amarillo', emoji: '⚪', title: 'Verificando parentesco' }
     };
     const cfg = levelConfig[result.level] || levelConfig.desconocido;
 
-    kinshipBox.style.display = 'flex';
-    kinshipBox.className = `alert-box ${cfg.cls}`;
+    kinshipBox.style.display = 'block';
+    kinshipBox.className = `kinship-result-card ${cfg.cls}`;
+    kinshipEmoji.textContent = cfg.emoji;
     kinshipTitle.textContent = cfg.title;
+    kinshipRelation.textContent = result.relation || '';
+    kinshipPercent.textContent = result.percent !== null ? `${result.percent}%` : '';
     kinshipMessage.textContent = result.message;
+
+    if (result.consequences && result.consequences.length > 0) {
+        kinshipConsequencesBox.style.display = 'block';
+        kinshipConsequencesList.innerHTML = result.consequences.map(c => `<li>${escapeHTML(c)}</li>`).join('');
+    } else {
+        kinshipConsequencesBox.style.display = 'none';
+        kinshipConsequencesList.innerHTML = '';
+    }
 
     return result;
 }
@@ -1982,20 +2111,16 @@ function renderKinshipCheck() {
 breedMotherSelect.addEventListener('change', renderKinshipCheck);
 breedFatherSelect.addEventListener('change', renderKinshipCheck);
 
-breedingForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const motherId = Number(breedMotherSelect.value);
-    const fatherId = Number(breedFatherSelect.value);
-    const dateVal = document.getElementById('breed-date').value;
+const breedingRiskModal = document.getElementById('breeding-risk-modal');
+const riskModalRelation = document.getElementById('risk-modal-relation');
+const riskModalPercent = document.getElementById('risk-modal-percent');
+const riskModalConsequences = document.getElementById('risk-modal-consequences');
+const riskModalCancelBtn = document.getElementById('risk-modal-cancel-btn');
+const riskModalConfirmBtn = document.getElementById('risk-modal-confirm-btn');
 
-    const result = checkKinship(motherId, fatherId);
-    if (result.level === 'alto') {
-        const confirmar = confirm(
-            `${result.message}\n\n¿Deseás registrar este cruce de todas formas? No se recomienda por el riesgo de consanguinidad.`
-        );
-        if (!confirmar) return;
-    }
-
+// Guarda efectivamente el registro de reproducción (llamada tanto en el camino
+// normal como al confirmar "Guardar de todos modos" en la advertencia de riesgo alto)
+function saveBreedingRecord(motherId, fatherId, dateVal) {
     const motherRabbit = getRabbitById(motherId);
     const fatherRabbit = getRabbitById(fatherId);
 
@@ -2022,6 +2147,41 @@ breedingForm.addEventListener('submit', (e) => {
     breedingFormCard.style.display = 'none';
     kinshipBox.style.display = 'none';
     populateBreedingSelects();
+}
+
+let pendingBreeding = null; // Guarda los datos de la cruza mientras se muestra la advertencia
+
+riskModalCancelBtn.addEventListener('click', () => {
+    breedingRiskModal.classList.remove('active');
+    pendingBreeding = null;
+});
+
+riskModalConfirmBtn.addEventListener('click', () => {
+    breedingRiskModal.classList.remove('active');
+    if (pendingBreeding) {
+        saveBreedingRecord(pendingBreeding.motherId, pendingBreeding.fatherId, pendingBreeding.dateVal);
+        pendingBreeding = null;
+    }
+});
+
+breedingForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const motherId = Number(breedMotherSelect.value);
+    const fatherId = Number(breedFatherSelect.value);
+    const dateVal = document.getElementById('breed-date').value;
+
+    const result = checkKinship(motherId, fatherId);
+    if (result.level === 'rojo') {
+        // Muestra la ventana de advertencia con el detalle del riesgo antes de guardar
+        riskModalRelation.textContent = result.relation || '—';
+        riskModalPercent.textContent = result.percent !== null ? `${result.percent}%` : '—';
+        riskModalConsequences.innerHTML = (result.consequences || []).map(c => `<li>${escapeHTML(c)}</li>`).join('');
+        pendingBreeding = { motherId, fatherId, dateVal };
+        breedingRiskModal.classList.add('active');
+        return;
+    }
+
+    saveBreedingRecord(motherId, fatherId, dateVal);
 });
 
 function renderBreeding() {
